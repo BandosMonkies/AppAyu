@@ -1,0 +1,34 @@
+{
+  "fullName": "Nagaraj Hegde",
+  "age": "18",
+  "gender": "male",
+  "phone": "9448406115",
+  "email": "my.email@gmail.com",
+  "bloodGroup": "A+",
+  "allergies": "BP",
+  "medications": "Nothing",
+  "medicalConditions": "Asthma",
+  "chiefComplaint": "headAche",
+  "symptoms": "Head Ache from morning. Vomitting also ",
+  "duration": "2 days",
+  "severity": "severe",
+  "affectedBodyPart": "Head",
+  "temperature": "",
+  "heartRate": "",
+  "bloodPressure": "",
+  "oxygenLevel": "",
+  "additionalNotes": "",
+  "emergencyConsent": "true",
+  "dataConsent": "true",
+  "submissionTime": "2025-10-24T18:14:35.713Z",
+  "photoCount": "2",
+  "reportCount": "1",
+  "uploadedPhotos": [
+    "20251024_234435_Screenshot_2025-10-14-00-45-58-15_944a2809ea1b4cda6ef12d1db9048ed3.jpg",
+    "20251024_234435_WhatsApp_Image_2025-10-02_at_8.44.42_PM.jpeg"
+  ],
+  "uploadedReports": [
+    "20251024_234435_Hackathon_PPT_Background_Research.pdf"
+  ],
+  "submissionId": "20251024234435"
+}
