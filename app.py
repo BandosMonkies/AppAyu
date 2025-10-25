@@ -379,10 +379,17 @@ def add_patient():
                         detected = detected_at.isoformat() if hasattr(detected_at, 'isoformat') else str(detected_at)
                     except Exception:
                         detected = str(detected_at)
-                    diseases.append({
+                    
+                    disease_data = {
                         'name': d.get('name'),
                         'detected_at': detected
-                    })
+                    }
+                    
+                    # Include ASHA worker information if available
+                    if 'checked_by' in d:
+                        disease_data['checked_by'] = d['checked_by']
+                    
+                    diseases.append(disease_data)
                 else:
                     diseases.append({'name': str(d), 'detected_at': None})
 
@@ -435,10 +442,16 @@ def search_patient():
             if detected_at and hasattr(detected_at, 'isoformat'):
                 detected_at = detected_at.isoformat()
 
-            diseases.append({
+            disease_data = {
                 'name': disease_name,
                 'detected_at': detected_at or "Unknown"
-            })
+            }
+            
+            # Include ASHA worker information if available
+            if isinstance(d, dict) and 'checked_by' in d:
+                disease_data['checked_by'] = d['checked_by']
+
+            diseases.append(disease_data)
 
         # Build clean response object
         resp_patient = {
@@ -514,12 +527,13 @@ def add_disease_route():
         data = request.get_json()
         username = data.get('username')
         disease_name = data.get('disease_name')
+        asha_worker_info = data.get('asha_worker_info')
         
         if not username or not disease_name:
             return jsonify({'error': 'Username and disease name are required'}), 400
 
         # Add the disease record to MongoDB
-        result = add_disease(username, disease_name)
+        result = add_disease(username, disease_name, asha_worker_info)
         return make_json_response(result)
 
     except Exception as e:
@@ -569,13 +583,25 @@ def predict():
         age = request.form.get('age')
         extra_info = request.form.get('extra_info')
         
+        # Get ASHA worker information
+        asha_worker_name = request.form.get('asha_worker_name')
+        asha_worker_id = request.form.get('asha_worker_id')
+        asha_worker_mobile = request.form.get('asha_worker_mobile')
+        
         analysis_result = analyze_with_gemini(filepath, category=category, age=age, extra_info=extra_info)
         if "error" in analysis_result:
             return jsonify({'error': analysis_result["error"]}), 500
             
-        # Store disease in database for patient
+        # Store disease in database for patient with ASHA worker info
         if patient_name:
-            add_disease(patient_name, analysis_result.get('disease', 'Unknown condition'))
+            asha_worker_info = None
+            if asha_worker_name and asha_worker_id and asha_worker_mobile:
+                asha_worker_info = {
+                    "name": asha_worker_name,
+                    "ashaId": asha_worker_id,
+                    "mobile": asha_worker_mobile
+                }
+            add_disease(patient_name, analysis_result.get('disease', 'Unknown condition'), asha_worker_info)
         return jsonify(analysis_result)
     except Exception as e:
         print(f"[error] Exception while processing {filepath}: {e}")

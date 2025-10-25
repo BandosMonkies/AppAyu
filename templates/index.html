@@ -3,56 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skin Disease Detector</title>
+  <title>MediScan AI - Advanced Health Analysis</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>">
 </head>
 <body>
 
   <div class="container">
     <header class="hero">
       <div class="hero-text">
-        <h1>AI Health Image Analyzer</h1>
-        <p>Upload an image and select the issue category &mdash; the AI will provide an analysis and suggested next steps.<br><small>(Educational use only &mdash; consult a professional)</small></p>
+        <h1>🏥 MediScan AI</h1>
+        <p>Advanced AI-powered health image analysis for accurate medical insights. Upload your medical image and get instant, professional-grade analysis with treatment recommendations.<br><small>⚠️ For educational purposes only - Always consult a qualified healthcare professional</small></p>
       </div>
     </header>
-    <div id="patientInfo" class="card" style="margin-bottom: 20px; padding: 15px;">
-      <h3>Patient Information</h3>
+    <div id="patientInfo" class="patient-info">
+      <h3>👤 Patient Information</h3>
       <div id="patientDetails">Loading patient details...</div>
     </div>
 
     <div class="layout">
       <section class="left-card card">
-        <h2>Upload & Options</h2>
-        <p class="muted">Choose an image and the relevant issue type</p>
+        <h2>📤 Upload & Analysis</h2>
+        <p class="muted">Upload your medical image and select the appropriate category for AI analysis</p>
 
         <div class="upload-box">
           <label class="file-label">
             <input type="file" id="fileInput" accept="image/*">
-            <span class="file-btn">Choose Image</span>
+            <span class="file-btn">📷 Choose Medical Image</span>
           </label>
 
           <div class="controls">
-            <label for="categorySelect" class="select-label">Issue type</label>
-            <select id="categorySelect" aria-label="Issue type select">
-              <option value="other">other issue</option>
-              <option value="eye">Eye related issue</option>
-              <option value="oral">Oral related issue</option>
-              <option value="skin">skin</option>
+            <label for="categorySelect" class="select-label">Medical Category</label>
+            <select id="categorySelect" aria-label="Medical category select">
+              <option value="skin">🩺 Dermatology (Skin)</option>
+              <option value="eye">👁️ Ophthalmology (Eye)</option>
+              <option value="oral">🦷 Oral Health</option>
+              <option value="other">🔬 Other Medical Issue</option>
             </select>
-            <button id="detectBtn" class="primary">Detect</button>
+            <button id="detectBtn" class="primary">🔍 Analyze Image</button>
           </div>
 
             <div class="extras">
-              <label for="ageInput" class="small">Age (optional)</label>
-              <input id="ageInput" type="number" min="0" placeholder="e.g. 35" />
+              <label for="ageInput">👤 Patient Age (optional)</label>
+              <input id="ageInput" type="number" min="0" max="120" placeholder="Enter patient age (e.g. 35)" />
 
-              <label for="extraInfo" class="small">Extra information (optional)</label>
-              <textarea id="extraInfo" rows="3" placeholder="Any relevant notes (duration, symptoms, medical history)"></textarea>
+              <label for="extraInfo">📝 Additional Medical Information (optional)</label>
+              <textarea id="extraInfo" rows="4" placeholder="Please provide any relevant medical history, symptoms duration, current medications, or other important details that might help with the analysis..."></textarea>
             </div>
 
           <div class="preview-wrap">
-            <img id="preview" src="" alt="Preview will appear here">
-            <p id="previewHint" class="muted small">Preview</p>
+            <img id="preview" src="" alt="Medical image preview will appear here">
+            <p id="previewHint" class="muted small">🖼️ Image Preview</p>
           </div>
         </div>
       </section>
@@ -61,36 +65,36 @@
         <!-- Severe Alert Banner -->
         <div id="severeAlert" class="severe-alert hidden">
           <div class="severe-alert-content">
-            <h2>🚨 SEVERE CONDITION DETECTED 🚨</h2>
-            <p><strong>Please contact a doctor immediately!</strong></p>
-            <p>This condition requires immediate medical attention. Do not delay seeking professional healthcare.</p>
+            <h2>🚨 URGENT MEDICAL ATTENTION REQUIRED 🚨</h2>
+            <p><strong>Please contact emergency medical services immediately!</strong></p>
+            <p>This condition requires immediate professional medical attention. Do not delay seeking emergency healthcare.</p>
           </div>
         </div>
 
         <div id="result" class="result-box hidden">
-      <h2>Prediction Result</h2>
-      <p><strong>Disease:</strong> <span id="disease"></span></p>
-      <!-- <p><strong>Confidence:</strong> <span id="confidence"></span>%</p> -->
-      <div class="disease-info">
-        <div class="analysis-box">
-          <h3>Image Analysis</h3>
-          <p><strong>Color Tone:</strong> <span id="colorTone"></span></p>
-          <p><strong>Texture:</strong> <span id="texture"></span></p>
-          <p><strong>Image Size:</strong> <span id="imageSize"></span></p>
-        </div>
-        <p><strong>Description:</strong> <span id="description"></span></p>
-        <p><strong>Severity Level:</strong> <span id="severity"></span></p>
-        <div class="treatments">
-          <p><strong>Recommended Medicines:</strong></p>
-          <ul id="treatments"></ul>
-        </div>
-        <div class="disclaimer">
-          <p><strong>Warning:</strong> <em>This is an AI-powered prediction tool for educational purposes only. Please consult a qualified healthcare professional for proper diagnosis and treatment.</em></p>
-        </div>
-      </div>
+          <h2>🔬 AI Analysis Results</h2>
+          <p><strong>Condition Detected:</strong> <span id="disease"></span></p>
+          <!-- <p><strong>Confidence:</strong> <span id="confidence"></span>%</p> -->
+          <div class="disease-info">
+            <div class="analysis-box">
+              <h3>🔍 Image Analysis Details</h3>
+              <p><strong>Color Characteristics:</strong> <span id="colorTone"></span></p>
+              <p><strong>Surface Texture:</strong> <span id="texture"></span></p>
+              <p><strong>Image Quality:</strong> <span id="imageSize"></span></p>
+            </div>
+            <p><strong>Medical Description:</strong> <span id="description"></span></p>
+            <p><strong>Severity Assessment:</strong> <span id="severity"></span></p>
+            <div class="treatments">
+              <p><strong>💊 Recommended Treatment:</strong></p>
+              <ul id="treatments"></ul>
+            </div>
+            <div class="disclaimer">
+              <p><strong>⚠️ Important Medical Disclaimer:</strong> <em>This AI analysis is for educational and preliminary screening purposes only. It should never replace professional medical diagnosis. Always consult a qualified healthcare professional for proper diagnosis, treatment, and medical advice.</em></p>
+            </div>
+          </div>
         </div>
         <div id="resultPlaceholder" class="placeholder">
-          <p class="muted">No analysis yet. Upload an image and press Detect.</p>
+          <p class="muted">🔄 Ready for analysis. Upload a medical image and click "Analyze Image" to begin.</p>
         </div>
       </section>
     </div>
@@ -98,8 +102,9 @@
 
   <script>
     let currentPatient = null;
+    let currentAshaWorker = null;
     
-    // Load patient info from localStorage (normalize fields)
+    // Load patient info and ASHA worker info from localStorage
     window.addEventListener('DOMContentLoaded', () => {
       const patientJson = localStorage.getItem('currentPatient');
       if (!patientJson) {
@@ -120,6 +125,39 @@
         detailsEl.innerHTML = `\n          <p><strong>Name:</strong> ${currentPatient.name}</p>\n          <p><strong>Phone:</strong> ${currentPatient.phone}</p>\n        `;
       } catch (err) {
         console.error('Failed to parse patient data from storage', err);
+        window.location.href = '/';
+        return;
+      }
+
+      // Load ASHA worker info from localStorage
+      try {
+        const currentUserMobile = localStorage.getItem('ayuscan_current_user_v1');
+        if (!currentUserMobile) {
+          alert('No ASHA worker logged in. Please login first.');
+          window.location.href = '/';
+          return;
+        }
+
+        const users = JSON.parse(localStorage.getItem('ayuscan_users_v1') || '{}');
+        const ashaWorker = users[currentUserMobile];
+        
+        if (!ashaWorker) {
+          alert('ASHA worker information not found. Please login again.');
+          window.location.href = '/';
+          return;
+        }
+
+        // Store ASHA worker info for later use
+        currentAshaWorker = {
+          name: ashaWorker.name,
+          ashaId: ashaWorker.ashaId,
+          mobile: ashaWorker.mobile
+        };
+        
+        console.log('Logged in ASHA Worker:', currentAshaWorker);
+      } catch (err) {
+        console.error('Failed to load ASHA worker data from storage', err);
+        alert('Error loading ASHA worker information. Please login again.');
         window.location.href = '/';
       }
     });
@@ -173,8 +211,14 @@
   // include optional user info
   if (ageInput && ageInput.value) formData.append('age', ageInput.value);
   if (extraInfo && extraInfo.value) formData.append('extra_info', extraInfo.value);
+  // include ASHA worker info from logged-in user
+  if (currentAshaWorker) {
+    formData.append('asha_worker_name', currentAshaWorker.name);
+    formData.append('asha_worker_id', currentAshaWorker.ashaId);
+    formData.append('asha_worker_mobile', currentAshaWorker.mobile);
+  }
 
-      detectBtn.textContent = 'Detecting...';
+      detectBtn.innerHTML = '<span class="loading"></span> Analyzing...';
       detectBtn.disabled = true;
 
       try {
@@ -185,7 +229,7 @@
           throw new Error(data.error);
         }
 
-  detectBtn.textContent = '🔍 Detect';
+  detectBtn.innerHTML = '🔍 Analyze Image';
         detectBtn.disabled = false;
 
         // Update basic information with fallbacks
@@ -266,9 +310,9 @@
           imageSizeText.textContent = 'Not analyzed';
         }
       } catch (error) {
-        detectBtn.textContent = '🔍 Detect Disease';
+        detectBtn.innerHTML = '🔍 Analyze Image';
         detectBtn.disabled = false;
-        alert('Error analyzing image: ' + error.message);
+        alert('❌ Error analyzing image: ' + error.message);
         return;
       }
       

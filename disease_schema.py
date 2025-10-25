@@ -7,11 +7,19 @@ users = db["users"]
 diseases = db["diseases"]
 
 # Function to log disease detection
-def add_disease(username, disease_name):
+def add_disease(username, disease_name, asha_worker_info=None):
     disease_record = {
         "name": disease_name,
         "detected_at": datetime.now()
     }
+    
+    # Add ASHA worker information if provided
+    if asha_worker_info:
+        disease_record["checked_by"] = {
+            "name": asha_worker_info.get("name"),
+            "asha_id": asha_worker_info.get("ashaId") or asha_worker_info.get("asha_id"),
+            "mobile": asha_worker_info.get("mobile")
+        }
 
     result = users.update_one(
         {"username": username},
