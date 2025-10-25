@@ -70,7 +70,7 @@
         <div id="result" class="result-box hidden">
       <h2>Prediction Result</h2>
       <p><strong>Disease:</strong> <span id="disease"></span></p>
-      <p><strong>Confidence:</strong> <span id="confidence"></span>%</p>
+      <!-- <p><strong>Confidence:</strong> <span id="confidence"></span>%</p> -->
       <div class="disease-info">
         <div class="analysis-box">
           <h3>Image Analysis</h3>
@@ -129,7 +129,7 @@
     const detectBtn = document.getElementById('detectBtn');
     const resultBox = document.getElementById('result');
   const diseaseText = document.getElementById('disease');
-    const confidenceText = document.getElementById('confidence');
+    // const confidenceText = document.getElementById('confidence');
     const descriptionText = document.getElementById('description');
     const severityText = document.getElementById('severity');
     const treatmentsList = document.getElementById('treatments');
@@ -190,7 +190,7 @@
 
         // Update basic information with fallbacks
         diseaseText.textContent = data.disease || 'Unknown';
-        confidenceText.textContent = data.confidence || 0;
+        // confidenceText.textContent = data.confidence || 0;
         descriptionText.textContent = data.description || 'No description available';
         // severity text and color
         const severityValue = data.severity || 'Unknown';
