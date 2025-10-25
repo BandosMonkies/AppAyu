@@ -741,5 +741,51 @@ def update_asha_worker_route():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/get_disease_statistics', methods=['GET'])
+def get_disease_statistics():
+    """Get statistics of all diseases detected across all patients."""
+    try:
+        # Get all users with diseases
+        all_patients = users.find({'diseases': {'$exists': True, '$ne': []}})
+        
+        # Count diseases
+        disease_counts = {}
+        total_patients = 0
+        total_detections = 0
+        
+        for patient in all_patients:
+            total_patients += 1
+            diseases = patient.get('diseases', [])
+            for disease in diseases:
+                if isinstance(disease, dict):
+                    disease_name = disease.get('name', 'Unknown')
+                else:
+                    disease_name = str(disease)
+                
+                # Clean up disease name (remove confidence percentages if any)
+                import re
+                disease_name = re.sub(r'\s*\(\d+%\s*confidence\)', '', disease_name).strip()
+                
+                if disease_name:
+                    disease_counts[disease_name] = disease_counts.get(disease_name, 0) + 1
+                    total_detections += 1
+        
+        # Sort by count (descending)
+        sorted_diseases = sorted(disease_counts.items(), key=lambda x: x[1], reverse=True)
+        
+        return make_json_response({
+            'success': True,
+            'statistics': {
+                'disease_counts': dict(sorted_diseases),
+                'total_patients': total_patients,
+                'total_detections': total_detections,
+                'unique_diseases': len(disease_counts)
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -146,6 +146,28 @@
       border-radius: 8px;
       margin-bottom: 15px;
     }
+
+    /* Disease statistics styles */
+    .disease-low:hover,
+    .disease-medium:hover,
+    .disease-high:hover,
+    .disease-critical:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .disease-critical {
+      animation: pulse-red 2s infinite;
+    }
+    
+    @keyframes pulse-red {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.85;
+      }
+    }
   </style>
 </head>
 <body>
@@ -420,6 +442,41 @@
               </div>
             </div>
           </div>
+
+          <!-- Disease Statistics Dashboard -->
+          <div class="card" style="margin-top: 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div>
+                <h3 style="margin:0" data-key="diseaseStatsTitle">Disease Dashboard</h3>
+                <div class="muted" style="margin-top:4px" data-key="diseaseStatsDesc">Regional disease prevalence statistics</div>
+              </div>
+              <button class="btn" onclick="loadDiseaseStatistics()" style="padding:8px 16px;font-size:14px">🔄 Refresh</button>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+              <div style="background:#f0f9ff;padding:12px;border-radius:8px;text-align:center">
+                <div class="muted" style="font-size:12px">Total Patients</div>
+                <div id="totalPatients" style="font-weight:700;font-size:24px;color:#0369a1">0</div>
+              </div>
+              <div style="background:#f0fdf4;padding:12px;border-radius:8px;text-align:center">
+                <div class="muted" style="font-size:12px">Total Detections</div>
+                <div id="totalDetections" style="font-weight:700;font-size:24px;color:#15803d">0</div>
+              </div>
+              <div style="background:#fef3c7;padding:12px;border-radius:8px;text-align:center">
+                <div class="muted" style="font-size:12px">Unique Diseases</div>
+                <div id="uniqueDiseases" style="font-weight:700;font-size:24px;color:#b45309">0</div>
+              </div>
+            </div>
+
+            <!-- Disease List -->
+            <div id="diseaseStatsList" style="max-height:400px;overflow-y:auto">
+              <div style="text-align:center;padding:20px;color:var(--muted)">
+                <div style="font-size:48px">📊</div>
+                <div>Click refresh to load disease statistics</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -499,6 +556,11 @@
         feature3Desc: "ASHA receives doctor advice and communicates to patient",
         feature4Title: "Priority Service",
         feature4Desc: "Urgent cases get immediate doctor attention",
+        
+        // Disease Dashboard
+        diseaseStatsTitle: "Disease Dashboard",
+        diseaseStatsDesc: "Regional disease prevalence statistics",
+        
         footerText: "Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export."
       },
       hi: {
@@ -569,6 +631,11 @@
         feature3Desc: "आशा को डॉक्टर की सलाह मिलती है और रोगी को संप्रेषित करती है",
         feature4Title: "प्राथमिकता सेवा",
         feature4Desc: "तत्काल मामलों को तुरंत डॉक्टर की सहायता मिलती है",
+        
+        // Disease Dashboard
+        diseaseStatsTitle: "रोग डैशबोर्ड",
+        diseaseStatsDesc: "क्षेत्रीय रोग व्यापकता सांख्यिकी",
+        
         footerText: "प्रोटोटाइप UI — कैनवा या PowerPoint निर्यात के लिए इस HTML/CSS को अनुकूलित करें।"
       },
       kn: {
@@ -639,6 +706,11 @@
         feature3Desc: "ಆಶಾಗೆ ಡಾಕ್ಟರ್ ಸಲಹೆ ಸಿಕ್ಕು ರೋಗಿಗೆ ತಿಳಿಸುತ್ತಾರೆ",
         feature4Title: "ಪ್ರಾಥಮಿಕತೆ ಸೇವೆ",
         feature4Desc: "ತುರ್ತು ಪ್ರಕರಣಗಳಿಗೆ ತಕ್ಷಣ ಡಾಕ್ಟರ್ ಗಮನ ಸಿಗುತ್ತದೆ",
+        
+        // Disease Dashboard
+        diseaseStatsTitle: "ರೋಗ ಡ್ಯಾಶ್ಬೋರ್ಡ್",
+        diseaseStatsDesc: "ಪ್ರಾದೇಶಿಕ ರೋಗ ಹರಡುವಿಕೆ ಅಂಕಿಅಂಶಗಳು",
+        
         footerText: "ಪ್ರೋಟೋಟೈಪ್ UI — ಕ್ಯಾನ್ವಾ ಅಥವಾ PowerPoint ರಫ್ತುಗಾಗಿ ಈ HTML/CSS ಅನ್ನು ಅಳವಡಿಸಿಕೊಳ್ಳಿ."
       }
     };
@@ -1257,6 +1329,115 @@
         qs('dashAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
       }
       renderTopRight();
+      
+      // Load disease statistics when dashboard is shown
+      loadDiseaseStatistics();
+    }
+
+    // ---------- Disease Statistics ----------
+    async function loadDiseaseStatistics() {
+      try {
+        const response = await fetch('/get_disease_statistics');
+        const result = await response.json();
+        
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        
+        if (result.success && result.statistics) {
+          const stats = result.statistics;
+          
+          // Update summary cards
+          document.getElementById('totalPatients').textContent = stats.total_patients || 0;
+          document.getElementById('totalDetections').textContent = stats.total_detections || 0;
+          document.getElementById('uniqueDiseases').textContent = stats.unique_diseases || 0;
+          
+          // Build disease list
+          const diseaseList = document.getElementById('diseaseStatsList');
+          const diseaseCounts = stats.disease_counts || {};
+          
+          if (Object.keys(diseaseCounts).length === 0) {
+            diseaseList.innerHTML = `
+              <div style="text-align:center;padding:20px;color:var(--muted)">
+                <div style="font-size:48px">📊</div>
+                <div>No disease data available yet</div>
+              </div>
+            `;
+            return;
+          }
+          
+          // Create disease items with color coding
+          let html = '<div style="display:grid;gap:8px">';
+          
+          for (const [disease, count] of Object.entries(diseaseCounts)) {
+            // Determine color based on count
+            let colorClass = 'disease-low';
+            let bgColor = '#f0fdf4';
+            let textColor = '#15803d';
+            let borderColor = '#86efac';
+            
+            if (count >= 50) {
+              colorClass = 'disease-critical';
+              bgColor = '#fef2f2';
+              textColor = '#991b1b';
+              borderColor = '#fca5a5';
+            } else if (count >= 30) {
+              colorClass = 'disease-high';
+              bgColor = '#fff7ed';
+              textColor = '#c2410c';
+              borderColor = '#fdba74';
+            } else if (count >= 15) {
+              colorClass = 'disease-medium';
+              bgColor = '#fef9c3';
+              textColor = '#b45309';
+              borderColor = '#fde047';
+            }
+            
+            html += `
+              <div class="${colorClass}" style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                padding:12px 16px;
+                background:${bgColor};
+                border-left:4px solid ${borderColor};
+                border-radius:8px;
+                transition:all 0.2s ease;
+              ">
+                <div style="flex:1">
+                  <div style="font-weight:600;color:${textColor}">${disease}</div>
+                  <div class="muted" style="font-size:12px;margin-top:2px">
+                    ${count >= 50 ? '🚨 Critical Alert' : 
+                      count >= 30 ? '⚠️ High Prevalence' : 
+                      count >= 15 ? '⚡ Moderate Cases' : 
+                      '✓ Low Cases'}
+                  </div>
+                </div>
+                <div style="
+                  font-size:24px;
+                  font-weight:700;
+                  color:${textColor};
+                  min-width:60px;
+                  text-align:right;
+                ">${count}</div>
+              </div>
+            `;
+          }
+          
+          html += '</div>';
+          diseaseList.innerHTML = html;
+          
+          appendLog(`Disease statistics loaded: ${stats.unique_diseases} unique diseases, ${stats.total_detections} total cases`);
+        }
+      } catch (error) {
+        console.error('Error loading disease statistics:', error);
+        document.getElementById('diseaseStatsList').innerHTML = `
+          <div style="text-align:center;padding:20px;color:#dc2626">
+            <div style="font-size:48px">⚠️</div>
+            <div>Error loading statistics: ${error.message}</div>
+          </div>
+        `;
+      }
     }
 
     // ---------- Log functionality ----------
