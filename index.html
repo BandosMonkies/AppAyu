@@ -3,273 +3,618 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AyuScan — Prototype Frontend</title>
+  <title>AyuScan — Full Prototype</title>
   <style>
-    /* Simple modern CSS — mobile-first */
     :root{
       --bg:#f7f7f6;
       --card:#ffffff;
       --muted:#6b7280;
       --accent:#0ea5a1;
       --danger:#ef4444;
-      --glass: rgba(255,255,255,0.6);
       font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:#111827}
-    .container{max-width:1100px;margin:28px auto;padding:16px}
-
+    .container{max-width:1100px;margin:24px auto;padding:16px}
     header{display:flex;align-items:center;gap:12px}
-    .logo{display:flex;flex-direction:column}
     .brand{font-weight:700;font-size:18px}
     .tag{font-size:12px;color:var(--muted)}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+    .center{display:flex;align-items:center;justify-content:center}
+    .muted{color:var(--muted);font-size:13px}
 
+    /* layout */
+    .row{display:flex;gap:16px}
+    .col{flex:1}
+
+    /* login/signup */
+    .auth-box{max-width:420px;margin:28px auto}
+    input, select, textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef0;margin-top:8px}
+    label{font-weight:600;font-size:13px}
+    .btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer;margin-top:12px}
+    .btn-muted{background:#eef2f2;color:#044640}
+    .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600}
+
+    /* dashboard grid */
     .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
-
-    /* responsive columns for larger screens */
     @media(min-width:900px){.grid{grid-template-columns:360px 1fr}}
 
-    .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
-
-    /* Left column (controls) */
-    .left .profile{display:flex;align-items:center;gap:12px}
-    .avatar{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
-    .small{font-size:13px;color:var(--muted)}
-
-    .scan-preview{height:250px;border-radius:10px;background:linear-gradient(180deg,#fbfdff,#f1f8f8);display:flex;align-items:center;justify-content:center;border:1px dashed #e6eef0;margin-top:12px}
-    .scan-preview img{max-width:100%;max-height:100%;border-radius:8px}
-
+    .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .scan-preview{height:240px;border-radius:10px;background:linear-gradient(180deg,#fbfdff,#f1f8f8);display:flex;align-items:center;justify-content:center;border:1px dashed #e6eef0;margin-top:12px}
     .controls{display:flex;gap:8px;margin-top:12px}
-    button{padding:10px 12px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:600;cursor:pointer}
-    .btn-muted{background:#eef2f2;color:#044640}
-    .btn-danger{background:var(--danger)}
-
-    /* Right column (workflow) */
-    .workflow{display:flex;flex-direction:column;gap:12px}
-    .step{display:flex;align-items:center;gap:12px}
-    .icon{width:56px;height:56px;border-radius:10px;background:#eef7f7;display:flex;align-items:center;justify-content:center;font-weight:700;color:#04605b}
-    h3{margin:0;font-size:16px}
-    p{margin:0;color:var(--muted);font-size:13px}
-
-    .log{margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(90deg,#ffffff,#fbfbfb);font-size:13px;min-height:90px;border:1px solid #eef2f2}
-
-    /* modal */
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:16px}
-    .modal{width:100%;max-width:540px;background:var(--card);border-radius:12px;padding:16px}
-
-    /* doctor list */
-    .doctor-list{display:grid;grid-template-columns:1fr;gap:10px}
+    .doctor-list{display:grid;gap:10px;margin-top:10px}
     .doctor{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;border:1px solid #f1f5f9}
     .doc-avatar{width:44px;height:44px;border-radius:8px;background:#e6f2f2;display:flex;align-items:center;justify-content:center;color:#044640}
+    .icon{width:56px;height:56px;border-radius:10px;background:#eef7f7;display:flex;align-items:center;justify-content:center;font-weight:700;color:#04605b}
+    .log{margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(90deg,#ffffff,#fbfbfb);font-size:13px;min-height:90px;border:1px solid #eef2f2}
+    .doctor-small{font-size:13px;color:var(--muted)}
 
     footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 
-    /* small screen tweaks */
-    @media(max-width:420px){.scan-preview{height:200px}}
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal{width:100%;max-width:540px;background:var(--card);border-radius:12px;padding:16px}
+
+    /* simple nav */
+    nav{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
+    .nav-btn{background:none;border:0;color:var(--accent);font-weight:700;cursor:pointer}
+
+    /* hidden */
+    .hidden{display:none}
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="app">
+
+    <!-- Header -->
     <header>
-      <div class="logo">
+      <div style="flex:1">
         <div class="brand">AyuScan</div>
         <div class="tag">Village → ASHA → Scan → Doctor Cloud</div>
       </div>
+      <div id="topRight" class="center">
+        <!-- populated dynamically -->
+      </div>
     </header>
 
-    <div class="grid">
-      <div class="left">
-        <div class="card">
-          <div class="profile">
-            <div class="avatar">A</div>
-            <div>
-              <div style="font-weight:700">ASHA Worker: Meena</div>
-              <div class="small">Phone: +91 98xxxxxxx</div>
-            </div>
-          </div>
+    <!-- Navigation (simple) -->
+    <nav id="navBar" class="hidden">
+      <button class="nav-btn" onclick="goTo('profile')">Profile</button>
+      <button class="nav-btn" onclick="goTo('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="logout()">Logout</button>
+    </nav>
 
-          <div class="scan-preview" id="preview">
-            <div style="text-align:center;color:var(--muted)">
-              <div style="font-weight:700">Scan Preview</div>
-              <div style="font-size:12px;margin-top:6px">Attach Skyvix 10× lens and capture</div>
-            </div>
-          </div>
+    <!-- AUTH: Login -->
+    <div id="view-login" class="auth-box card">
+      <h2>Login – Mobile OTP</h2>
+      <div class="muted">Enter your mobile number. We'll send a one-time PIN (simulated for demo).</div>
 
-          <div class="controls">
-            <label for="file" style="flex:1">
-              <input id="file" type="file" accept="image/*" style="display:none" onchange="loadPreview(event)"/>
-              <div class="btn-muted" style="display:flex;align-items:center;justify-content:center">Choose Image</div>
-            </label>
-            <button onclick="simulateScan()">Analyze</button>
-            <button class="btn-danger" onclick="openPay()">Priority</button>
-          </div>
+      <label>Mobile Number</label>
+      <input id="loginMobile" placeholder="e.g., 98XXXXXXXX" inputmode="numeric" />
 
-          <div style="margin-top:12px;font-size:13px;color:var(--muted)">Last action:</div>
-          <div class="log" id="log">No scans yet.</div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-weight:700">Doctor Queue</div>
-            <div class="small">Online: <strong id="onlineCount">3</strong></div>
-          </div>
-
-          <div class="doctor-list" style="margin-top:10px">
-            <div class="doctor"><div class="doc-avatar">DR</div><div><strong>Dr. R. Sharma</strong><div class="small">Dermatology</div></div></div>
-            <div class="doctor"><div class="doc-avatar">AK</div><div><strong>Dr. A. Khan</strong><div class="small">General Physician</div></div></div>
-            <div class="doctor"><div class="doc-avatar">LS</div><div><strong>Dr. L. Singh</strong><div class="small">Ophthalmology</div></div></div>
-          </div>
-        </div>
-
+      <div id="otpSection" class="hidden">
+        <label>Enter OTP</label>
+        <input id="loginOtp" placeholder="4-digit code" inputmode="numeric" />
       </div>
 
-      <div class="workflow">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h3>Workflow</h3>
-              <p class="small">Scan → AI analyze → Doctor review → Feedback</p>
-            </div>
-            <div style="text-align:right">
-              <div class="small">Scan Fee</div>
-              <div style="font-weight:700">Normal ₹30 • Priority ₹150</div>
-            </div>
-          </div>
+      <button id="sendOtpBtn" class="btn" onclick="sendOtp()">Send OTP</button>
+      <button id="verifyOtpBtn" class="btn hidden" onclick="verifyOtp()">Verify OTP</button>
 
-          <div style="margin-top:12px;display:grid;gap:10px">
-            <div class="step">
-              <div class="icon">1</div>
-              <div>
-                <div style="font-weight:700">Scan</div>
-                <div class="small">ASHA worker captures image using smartphone + lens</div>
-              </div>
-            </div>
-
-            <div class="step">
-              <div class="icon">2</div>
-              <div>
-                <div style="font-weight:700">AI Analyze</div>
-                <div class="small">On-device model gives preliminary result & urgency flag</div>
-              </div>
-            </div>
-
-            <div class="step">
-              <div class="icon">3</div>
-              <div>
-                <div style="font-weight:700">Doctor Cloud</div>
-                <div class="small">Secure upload for doctor verification and prescription</div>
-              </div>
-            </div>
-
-            <div class="step">
-              <div class="icon">4</div>
-              <div>
-                <div style="font-weight:700">Feedback</div>
-                <div class="small">ASHA receives doctor advice and communicates to patient</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="card">
-          <h3>Recent Reports</h3>
-          <div id="reports" style="margin-top:10px;display:grid;gap:8px">
-            <!-- populated by JS -->
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Prototype Actions</h3>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button onclick="addDummyReport()">Add Dummy Report</button>
-            <button class="btn-muted" onclick="clearReports()">Clear</button>
-          </div>
-        </div>
-
+      <div style="margin-top:10px">
+        <span class="muted">New here?</span>
+        <span class="link" onclick="goTo('signup')">Create an account</span>
       </div>
     </div>
 
-    <footer>Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export.</footer>
-  </div>
+    <!-- AUTH: Signup -->
+    <div id="view-signup" class="auth-box card hidden">
+      <h2>Create ASHA Account</h2>
+      <div class="muted">Fill details to register.</div>
 
-  <!-- Modal for payment / priority -->
-  <div class="modal-backdrop" id="modal">
-    <div class="modal card">
-      <h3>Priority Scan — ₹150</h3>
-      <p class="small">Pay to prioritize this scan. Doctors will be notified instantly.</p>
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <button onclick="payNow()">Pay with UPI</button>
-        <button class="btn-muted" onclick="closePay()">Cancel</button>
+      <label>Full Name</label>
+      <input id="suName" />
+
+      <label>ASHA Worker ID</label>
+      <input id="suAshaId" />
+
+      <label>Mobile Number</label>
+      <input id="suMobile" inputmode="numeric" />
+
+      <label>Education Qualification</label>
+      <input id="suEducation" placeholder="e.g., ANM, GNM, 12th pass" />
+
+      <label>Years of Service</label>
+      <input id="suYears" type="number" min="0" />
+
+      <label>Village / PHC Assigned</label>
+      <input id="suVillage" />
+
+      <label>Password</label>
+      <input id="suPassword" type="password" />
+
+      <label>Confirm Password</label>
+      <input id="suPassword2" type="password" />
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn" onclick="createAccount()">Create Account</button>
+        <button class="btn-muted" onclick="goTo('login')">Back to login</button>
       </div>
     </div>
+
+    <!-- PROFILE -->
+    <div id="view-profile" class="card hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div id="profileAvatar" class="avatar">A</div>
+          <div>
+            <div id="profileName" style="font-weight:700;font-size:18px">ASHA Worker</div>
+            <div class="muted" id="profileAshaId">ID: -</div>
+          </div>
+        </div>
+        <div>
+          <button class="btn" onclick="goTo('dashboard')">Go to Dashboard</button>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0" />
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:18px">
+        <div>
+          <label>Full Name</label>
+          <input id="pfName" />
+
+          <label>ASHA Worker ID</label>
+          <input id="pfAshaId" />
+
+          <label>Mobile Number</label>
+          <input id="pfMobile" />
+
+          <label>Education</label>
+          <input id="pfEducation" />
+
+          <label>Years of Service</label>
+          <input id="pfYears" type="number" />
+
+          <label>Village / PHC</label>
+          <input id="pfVillage" />
+
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn" onclick="saveProfile()">Save Profile</button>
+            <button class="btn-muted" onclick="resetProfile()">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <label>Profile Photo</label>
+          <div style="margin-top:8px">
+            <input type="file" id="pfPhoto" accept="image/*" onchange="loadProfilePhoto(event)" />
+          </div>
+          <div style="margin-top:12px" id="photoPreview"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD (main UI) -->
+    <div id="view-dashboard" class="hidden">
+      <div class="grid">
+        <!-- Left column -->
+        <div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="dashAvatar" class="avatar">A</div>
+              <div>
+                <div id="dashName" style="font-weight:700">ASHA Worker</div>
+                <div class="muted" id="dashMobile">+91 -</div>
+              </div>
+            </div>
+
+            <div class="scan-preview" id="preview">
+              <div style="text-align:center;color:var(--muted)">
+                <div style="font-weight:700">Scan Preview</div>
+                <div style="font-size:12px;margin-top:6px">Attach Skyvix 10× lens and capture</div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <label for="file" style="flex:1;cursor:pointer">
+                <input id="file" type="file" accept="image/*" style="display:none" onchange="loadPreview(event)"/>
+                <div class="btn-muted" style="display:flex;align-items:center;justify-content:center">Choose Image</div>
+              </label>
+
+              <button class="btn" onclick="simulateScan()">Analyze</button>
+              <button class="btn" style="background:var(--danger)" onclick="openPay()">Priority</button>
+            </div>
+
+            <div style="margin-top:12px;font-size:13px;color:var(--muted)">Last action:</div>
+            <div class="log" id="log">No scans yet.</div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-weight:700">Doctor Queue</div>
+              <div class="muted">Online: <strong id="onlineCount">3</strong></div>
+            </div>
+
+            <div class="doctor-list" id="doctorList">
+              <div class="doctor"><div class="doc-avatar">DR</div><div><strong>Dr. R. Sharma</strong><div class="doctor-small">Dermatology</div></div></div>
+              <div class="doctor"><div class="doc-avatar">AK</div><div><strong>Dr. A. Khan</strong><div class="doctor-small">General Physician</div></div></div>
+              <div class="doctor"><div class="doc-avatar">LS</div><div><strong>Dr. L. Singh</strong><div class="doctor-small">Ophthalmology</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="workflow">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h3 style="margin:0">Workflow</h3>
+                <div class="muted" style="margin-top:4px">Scan → AI analyze → Doctor review → Feedback</div>
+              </div>
+              <div style="text-align:right">
+                <div class="muted">Scan Fee</div>
+                <div style="font-weight:700">Normal ₹30 • Priority ₹150</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;display:grid;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">1</div>
+                <div><div style="font-weight:700">Scan</div><div class="muted">ASHA captures image using smartphone + lens</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">2</div>
+                <div><div style="font-weight:700">AI Analyze</div><div class="muted">On-device model gives preliminary result & urgency flag</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">3</div>
+                <div><div style="font-weight:700">Doctor Cloud</div><div class="muted">Secure upload for doctor verification and prescription</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">4</div>
+                <div><div style="font-weight:700">Feedback</div><div class="muted">ASHA receives doctor advice and communicates to patient</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <h3 style="margin:0 0 8px 0">Recent Reports</h3>
+            <div id="reports" style="display:grid;gap:8px"></div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <h3 style="margin:0 0 8px 0">Prototype Actions</h3>
+            <div style="display:flex;gap:8px">
+              <button class="btn" onclick="addDummyReport()">Add Dummy Report</button>
+              <button class="btn-muted" onclick="clearReports()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export.</footer>
+    </div>
+
+    <!-- Priority payment modal -->
+    <div class="modal-backdrop" id="modal">
+      <div class="modal card">
+        <h3>Priority Scan — ₹150</h3>
+        <p class="muted">Pay to prioritize this scan. Doctors will be notified instantly.</p>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn" onclick="payNow()">Pay (Simulated)</button>
+          <button class="btn-muted" onclick="closePay()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    // small interactive behaviors for the prototype
-    const logEl = document.getElementById('log')
-    const reportsEl = document.getElementById('reports')
-    const preview = document.getElementById('preview')
-    const modal = document.getElementById('modal')
+    // ---------- Simple client-side auth & storage ----------
+    // Users are stored in localStorage as {mobile: {...profile..., password}}
+    const LS_USERS = 'ayuscan_users_v1';
+    const LS_CURRENT = 'ayuscan_current_user_v1';
 
-    function appendLog(text){
-      const t = document.createElement('div')
-      t.textContent = new Date().toLocaleTimeString() + ' — ' + text
-      logEl.prepend(t)
+    // Utility helpers
+    function qs(id){ return document.getElementById(id) }
+    function showView(viewId){
+      // hide all view-* elements
+      const views = document.querySelectorAll('[id^="view-"], #view-dashboard, #view-profile');
+      views.forEach(v => v.classList.add('hidden'));
+      // show requested view
+      qs(viewId === 'dashboard' ? 'view-dashboard' : (viewId === 'profile' ? 'view-profile' : ('view-' + viewId))).classList.remove('hidden');
+
+      // toggle nav
+      const nav = qs('navBar');
+      if(viewId === 'login' || viewId === 'signup') nav.classList.add('hidden'); else nav.classList.remove('hidden');
+    }
+
+    function loadUsers(){
+      try { return JSON.parse(localStorage.getItem(LS_USERS) || '{}'); }
+      catch(e){ return {}; }
+    }
+    function saveUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+
+    function setCurrentUser(mobile){
+      localStorage.setItem(LS_CURRENT, mobile);
+      renderTopRight();
+    }
+    function getCurrentUser(){
+      return localStorage.getItem(LS_CURRENT);
+    }
+    function clearCurrentUser(){
+      localStorage.removeItem(LS_CURRENT);
+      renderTopRight();
+    }
+
+    // Navigation helper
+    function goTo(view){
+      if(view === 'login') {
+        showView('login');
+      } else if(view === 'signup') {
+        showView('signup');
+      } else if(view === 'dashboard') {
+        populateDashboard();
+        showView('dashboard');
+      } else if(view === 'profile') {
+        populateProfile();
+        showView('profile');
+      }
+    }
+
+    // initial startup view
+    (function init(){
+      // if logged in -> dashboard else login
+      if(getCurrentUser()){
+        goTo('dashboard');
+      } else {
+        goTo('login');
+      }
+    })();
+
+    // Top-right header area
+    function renderTopRight(){
+      const top = qs('topRight');
+      const cur = getCurrentUser();
+      top.innerHTML = '';
+      if(cur){
+        const users = loadUsers();
+        const u = users[cur];
+        const span = document.createElement('div');
+        span.style.display = 'flex'; span.style.gap = '12px'; span.style.alignItems = 'center';
+        const small = document.createElement('div');
+        small.innerHTML = `<div style="font-weight:700">${u.name}</div><div class="muted">ASHA ID: ${u.ashaId}</div>`;
+        span.appendChild(small);
+        top.appendChild(span);
+      } else {
+        top.innerHTML = '<div class="muted">Not signed in</div>';
+      }
+    }
+
+    // ---------- Signup ----------
+    function createAccount(){
+      const name = qs('suName').value.trim();
+      const ashaId = qs('suAshaId').value.trim();
+      const mobile = qs('suMobile').value.trim();
+      const education = qs('suEducation').value.trim();
+      const years = qs('suYears').value.trim();
+      const village = qs('suVillage').value.trim();
+      const pw = qs('suPassword').value;
+      const pw2 = qs('suPassword2').value;
+
+      if(!name || !mobile || !ashaId || !pw) return alert('Please fill name, ASHA ID, mobile and password.');
+
+      if(pw !== pw2) return alert('Passwords do not match.');
+
+      const users = loadUsers();
+      if(users[mobile]) return alert('An account with this mobile already exists. Please login.');
+
+      users[mobile] = {
+        name, ashaId, mobile, education, years: years || 0, village, password: pw, photo: ''
+      };
+      saveUsers(users);
+      alert('Account created. Please login.');
+      // prefill login mobile
+      qs('loginMobile').value = mobile;
+      goTo('login');
+    }
+
+    // ---------- Login via OTP (simulated) ----------
+    let currentOtp = null;
+    function sendOtp(){
+      const mobile = qs('loginMobile').value.trim();
+      if(!mobile) return alert('Enter mobile number.');
+      const users = loadUsers();
+      if(!users[mobile]) return alert('No account found for this mobile. Create account first.');
+
+      // simulate OTP generation and "send"
+      currentOtp = String(Math.floor(1000 + Math.random()*9000));
+      console.log('Simulated OTP for demo:', currentOtp);
+      alert('Simulated OTP (for demo): ' + currentOtp);
+
+      // show OTP input
+      qs('otpSection').classList.remove('hidden');
+      qs('sendOtpBtn').classList.add('hidden');
+      qs('verifyOtpBtn').classList.remove('hidden');
+    }
+
+    function verifyOtp(){
+      const entered = qs('loginOtp').value.trim();
+      if(!entered) return alert('Enter OTP.');
+      if(entered !== currentOtp) return alert('Invalid OTP. Try again.');
+      // set as logged in
+      const mobile = qs('loginMobile').value.trim();
+      setCurrentUser(mobile);
+      currentOtp = null;
+      qs('loginOtp').value = '';
+      qs('loginMobile').value = '';
+      qs('otpSection').classList.add('hidden');
+      qs('sendOtpBtn').classList.remove('hidden');
+      qs('verifyOtpBtn').classList.add('hidden');
+      goTo('dashboard');
+      appendLog('Logged in as ' + mobile);
+    }
+
+    function logout(){
+      clearCurrentUser();
+      goTo('login');
+    }
+
+    // ---------- Profile handling ----------
+    function populateProfile(){
+      const cur = getCurrentUser();
+      if(!cur) { goTo('login'); return; }
+      const users = loadUsers();
+      const u = users[cur];
+      qs('profileName').textContent = u.name || 'ASHA Worker';
+      qs('profileAshaId').textContent = 'ID: ' + (u.ashaId || '-');
+
+      qs('pfName').value = u.name || '';
+      qs('pfAshaId').value = u.ashaId || '';
+      qs('pfMobile').value = u.mobile || '';
+      qs('pfEducation').value = u.education || '';
+      qs('pfYears').value = u.years || '';
+      qs('pfVillage').value = u.village || '';
+
+      if(u.photo){
+        qs('photoPreview').innerHTML = `<img src="${u.photo}" alt="photo" style="width:160px;border-radius:8px" />`;
+        qs('profileAvatar').textContent = '';
+        qs('dashAvatar').style.backgroundImage = `url(${u.photo})`;
+        qs('dashAvatar').textContent = '';
+      } else {
+        qs('photoPreview').innerHTML = '';
+        qs('profileAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+        qs('dashAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+      }
+      renderTopRight();
+    }
+
+    function saveProfile(){
+      const cur = getCurrentUser();
+      if(!cur) return alert('No user logged in');
+      const users = loadUsers();
+      const u = users[cur];
+      u.name = qs('pfName').value.trim();
+      u.ashaId = qs('pfAshaId').value.trim();
+      u.mobile = qs('pfMobile').value.trim();
+      u.education = qs('pfEducation').value.trim();
+      u.years = qs('pfYears').value.trim();
+      u.village = qs('pfVillage').value.trim();
+      users[cur] = u;
+      saveUsers(users);
+      alert('Profile saved.');
+      populateProfile();
+    }
+
+    function resetProfile(){
+      populateProfile();
+    }
+
+    function loadProfilePhoto(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const data = ev.target.result;
+        qs('photoPreview').innerHTML = `<img src="${data}" alt="photo" style="width:160px;border-radius:8px" />`;
+        // save in user record
+        const cur = getCurrentUser();
+        if(!cur) return;
+        const users = loadUsers();
+        users[cur].photo = data;
+        saveUsers(users);
+        populateProfile();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ---------- Dashboard population ----------
+    function populateDashboard(){
+      const cur = getCurrentUser();
+      if(!cur) { goTo('login'); return; }
+      const users = loadUsers();
+      const u = users[cur];
+      qs('dashName').textContent = u.name || 'ASHA Worker';
+      qs('dashMobile').textContent = '+91 ' + (u.mobile || '-');
+      if(u.photo){
+        qs('dashAvatar').style.backgroundImage = `url(${u.photo})`;
+        qs('dashAvatar').textContent = '';
+      } else {
+        qs('dashAvatar').style.backgroundImage = '';
+        qs('dashAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+      }
+      renderTopRight();
+    }
+
+    // ---------- Existing scan & reporting functions (cleaned) ----------
+    const logEl = qs('log');
+    const reportsEl = qs('reports');
+    const preview = qs('preview');
+    const modal = qs('modal');
+
+    function appendLog(text) {
+      const t = document.createElement('div');
+      t.textContent = new Date().toLocaleTimeString() + ' — ' + text;
+      if(logEl) logEl.prepend(t);
     }
 
     function loadPreview(e){
-      const file = e.target.files[0]
-      if(!file) return
-      const url = URL.createObjectURL(file)
-      preview.innerHTML = `<img src="${url}" alt="scan" />`
-      appendLog('Image selected')
+      const file = e.target.files[0];
+      if(!file) return;
+      const url = URL.createObjectURL(file);
+      if(preview) preview.innerHTML = `<img src="${url}" alt="scan" style="max-width:100%;max-height:100%;border-radius:8px" />`;
+      appendLog('Image selected');
     }
 
     function simulateScan(){
-      appendLog('Running on-device analysis...')
-      // fake analysis time
+      appendLog('Running on-device analysis...');
       setTimeout(()=>{
-        const confidence = Math.floor(60 + Math.random()*30)
-        const urgent = Math.random() > 0.75
-        const summary = urgent ? 'Possible urgent lesion — doctor review recommended' : 'Suspicious mark detected — send to doctor for confirmation'
-        appendLog(summary + ` (confidence ${confidence}%)`)
-        addReport({type: urgent ? 'Priority' : 'Normal', summary, confidence})
-      }, 1200)
+        const confidence = Math.floor(60 + Math.random()*30);
+        const urgent = Math.random() > 0.75;
+        const summary = urgent ? 'Possible urgent lesion — doctor review recommended' : 'Suspicious mark detected — send to doctor for confirmation';
+        appendLog(summary + ` (confidence ${confidence}%)`);
+        addReport({type: urgent ? 'Priority' : 'Normal', summary, confidence});
+      }, 1200);
     }
 
     function addReport(report){
-      const id = 'R' + Math.floor(Math.random()*9000+1000)
-      const node = document.createElement('div')
-      node.className = 'doctor'
-      node.innerHTML = `<div class="doc-avatar">${report.type=='Priority'? '⚡':'✓'}</div><div><strong>${report.summary}</strong><div class="small">ID: ${id} • Confidence: ${report.confidence}%</div></div>`
-      reportsEl.prepend(node)
-      appendLog('Report uploaded to Doctor Cloud (ID: ' + id + ')')
+      const id = 'R' + Math.floor(Math.random()*9000+1000);
+      const node = document.createElement('div');
+      node.className = 'doctor';
+      node.innerHTML = `
+        <div class="doc-avatar">${report.type == 'Priority' ? '⚡' : '✓'}</div>
+        <div>
+          <strong>${report.summary}</strong>
+          <div class="small">ID: ${id} • Confidence: ${report.confidence}%</div>
+        </div>`;
+      if(reportsEl) reportsEl.prepend(node);
+      appendLog('Report uploaded to Doctor Cloud (ID: ' + id + ')');
     }
 
     function addDummyReport(){
-      addReport({type:'Normal',summary:'Dry rash — likely fungal infection',confidence:78})
+      addReport({type:'Normal',summary:'Dry rash — likely fungal infection',confidence:78});
     }
 
     function clearReports(){
-      reportsEl.innerHTML = ''
-      appendLog('Cleared reports')
+      if(reportsEl) reportsEl.innerHTML = '';
+      appendLog('Cleared reports');
     }
 
-    function openPay(){ modal.style.display = 'flex' }
-    function closePay(){ modal.style.display = 'none' }
+    function openPay(){ if(modal) modal.style.display = 'flex' }
+    function closePay(){ if(modal) modal.style.display = 'none' }
     function payNow(){
-      appendLog('Priority payment processed — notifying doctors')
-      closePay()
-      // simulate immediate doctor response
+      appendLog('Priority payment processed — notifying doctors');
+      closePay();
       setTimeout(()=>{
-        appendLog('Doctor accepted priority case — recommendation sent')
-        addReport({type:'Priority',summary:'Immediate referral: suspect bacterial infection. Start oral antibiotic & refer to PHC',confidence:92})
-      },1200)
+        appendLog('Doctor accepted priority case — recommendation sent');
+        addReport({type:'Priority',summary:'Immediate referral: suspect bacterial infection. Start oral antibiotic & refer to PHC',confidence:92});
+      },1200);
     }
 
-    // init
-    appendLog('AyuScan UI ready')
+    // init small startup log
+    appendLog('AyuScan UI ready');
   </script>
 </body>
 </html>
