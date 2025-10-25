@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skin Disease Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h1>🧠 AI Skin Disease Detector</h1>
+    <p>Upload a skin image and let AI assist in predicting possible conditions.<br><small>(For educational use only)</small></p>
+
+    <div class="upload-box">
+      <input type="file" id="fileInput" accept="image/*">
+      <img id="preview" src="" alt="Preview will appear here">
+      <button id="detectBtn">🔍 Detect Disease</button>
+    </div>
+
+    <div id="result" class="result-box hidden">
+      <h2>Prediction Result</h2>
+      <p><strong>Disease:</strong> <span id="disease"></span></p>
+      <p><strong>Confidence:</strong> <span id="confidence"></span>%</p>
+      <div class="disease-info">
+        <div class="analysis-box">
+          <h3>Image Analysis</h3>
+          <p><strong>Color Tone:</strong> <span id="colorTone"></span></p>
+          <p><strong>Texture:</strong> <span id="texture"></span></p>
+          <p><strong>Image Size:</strong> <span id="imageSize"></span></p>
+        </div>
+        <p><strong>Description:</strong> <span id="description"></span></p>
+        <p><strong>Severity Level:</strong> <span id="severity"></span></p>
+        <div class="treatments">
+          <p><strong>Recommended Treatments:</strong></p>
+          <ul id="treatments"></ul>
+        </div>
+        <div class="disclaimer">
+          <p>⚠️ <em>This is an AI-powered prediction tool for educational purposes only. 
+          Please consult a qualified healthcare professional for proper diagnosis and treatment.</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const detectBtn = document.getElementById('detectBtn');
+    const resultBox = document.getElementById('result');
+    const diseaseText = document.getElementById('disease');
+    const confidenceText = document.getElementById('confidence');
+    const descriptionText = document.getElementById('description');
+    const severityText = document.getElementById('severity');
+    const treatmentsList = document.getElementById('treatments');
+    const colorToneText = document.getElementById('colorTone');
+    const textureText = document.getElementById('texture');
+    const imageSizeText = document.getElementById('imageSize');
+
+    let selectedFile;
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0];
+      if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(selectedFile);
+      }
+    });
+
+    detectBtn.addEventListener('click', async () => {
+      if (!selectedFile) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      detectBtn.textContent = 'Detecting...';
+      detectBtn.disabled = true;
+
+      try {
+        const response = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        detectBtn.textContent = '🔍 Detect Disease';
+        detectBtn.disabled = false;
+
+        // Update basic information with fallbacks
+        diseaseText.textContent = data.disease || 'Unknown';
+        confidenceText.textContent = data.confidence || 0;
+        descriptionText.textContent = data.description || 'No description available';
+        severityText.textContent = data.severity || 'Unknown';
+        
+        // Update analysis information with fallbacks
+        if (data.analysis) {
+          colorToneText.textContent = data.analysis.color_tone || 'Not analyzed';
+          textureText.textContent = data.analysis.texture || 'Not analyzed';
+          imageSizeText.textContent = data.analysis.size || 'Not analyzed';
+        } else {
+          colorToneText.textContent = 'Not analyzed';
+          textureText.textContent = 'Not analyzed';
+          imageSizeText.textContent = 'Not analyzed';
+        }
+        
+        // Clear and update treatments list with fallback
+        treatmentsList.innerHTML = '';
+        if (Array.isArray(data.treatments) && data.treatments.length > 0) {
+          data.treatments.forEach(treatment => {
+            const li = document.createElement('li');
+            li.textContent = treatment;
+            treatmentsList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'No specific treatments provided';
+          treatmentsList.appendChild(li);
+        }
+      } catch (error) {
+        detectBtn.textContent = '🔍 Detect Disease';
+        detectBtn.disabled = false;
+        alert('Error analyzing image: ' + error.message);
+        return;
+      }
+      
+      resultBox.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

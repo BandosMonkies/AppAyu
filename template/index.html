@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skin Disease Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h1>🧠 AI Skin Disease Detector</h1>
+    <p>Upload a skin image and let AI assist in predicting possible conditions.<br><small>(For educational use only)</small></p>
+
+    <div class="upload-box">
+      <input type="file" id="fileInput" accept="image/*">
+      <img id="preview" src="" alt="Preview will appear here">
+      <button id="detectBtn">🔍 Detect Disease</button>
+    </div>
+
+    <div id="result" class="result-box hidden">
+      <h2>Prediction Result</h2>
+      <p><strong>Disease:</strong> <span id="disease"></span></p>
+      <p><strong>Confidence:</strong> <span id="confidence"></span>%</p>
+      <div class="disease-info">
+        <div class="severity-box" id="severityBox">
+          <h3>Severity Assessment</h3>
+          <p><strong>Level:</strong> <span id="severity"></span></p>
+          <div class="severity-meter">
+            <div class="meter-fill" id="severityMeter"></div>
+          </div>
+        </div>
+        
+        <div class="description-box">
+          <h3>Condition Description</h3>
+          <p id="description"></p>
+        </div>
+
+        <div class="analysis-box">
+          <h3>Visual Analysis</h3>
+          <p><strong>Color Characteristics:</strong> <span id="colorTone"></span></p>
+          <p><strong>Texture Analysis:</strong> <span id="texture"></span></p>
+          <p><strong>Image Resolution:</strong> <span id="imageSize"></span></p>
+        </div>
+
+        <div class="treatments">
+          <h3>Recommended Treatments</h3>
+          <ul id="treatments" class="treatment-list"></ul>
+        </div>
+
+        <div class="disclaimer">
+          <p id="disclaimer">⚠️ <em>This is an AI-powered prediction tool for educational purposes only. 
+          Please consult a qualified healthcare professional for proper diagnosis and treatment.</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const detectBtn = document.getElementById('detectBtn');
+    const resultBox = document.getElementById('result');
+    const diseaseText = document.getElementById('disease');
+    const confidenceText = document.getElementById('confidence');
+    const descriptionText = document.getElementById('description');
+    const severityText = document.getElementById('severity');
+    const treatmentsList = document.getElementById('treatments');
+    const colorToneText = document.getElementById('colorTone');
+    const textureText = document.getElementById('texture');
+    const imageSizeText = document.getElementById('imageSize');
+
+    let selectedFile;
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0];
+      if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(selectedFile);
+      }
+    });
+
+    detectBtn.addEventListener('click', async () => {
+      if (!selectedFile) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      detectBtn.textContent = 'Detecting...';
+      detectBtn.disabled = true;
+
+      try {
+        const response = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        detectBtn.textContent = '🔍 Detect Disease';
+        detectBtn.disabled = false;
+
+        // Update basic information with fallbacks
+        diseaseText.textContent = data.disease || 'Unknown';
+        confidenceText.textContent = data.confidence || 0;
+        
+        // Update description with formatting
+        descriptionText.textContent = data.description || 'No description available';
+        
+        // Update severity and meter
+        const severityBox = document.getElementById('severityBox');
+        const severityMeter = document.getElementById('severityMeter');
+        severityText.textContent = data.severity || 'Unknown';
+        
+        // Set severity meter color and width
+        let meterWidth = 0;
+        let meterColor = '#0066cc';
+        switch(data.severity.toLowerCase()) {
+          case 'mild':
+            meterWidth = 33;
+            meterColor = '#28a745';
+            break;
+          case 'moderate':
+            meterWidth = 66;
+            meterColor = '#ffc107';
+            break;
+          case 'severe':
+            meterWidth = 100;
+            meterColor = '#dc3545';
+            break;
+        }
+        severityMeter.style.width = `${meterWidth}%`;
+        severityMeter.style.backgroundColor = meterColor;
+        
+        // Update analysis information with fallbacks
+        if (data.analysis) {
+          colorToneText.textContent = data.analysis.color_tone || 'Not analyzed';
+          textureText.textContent = data.analysis.texture || 'Not analyzed';
+          imageSizeText.textContent = data.analysis.size || 'Not analyzed';
+        } else {
+          colorToneText.textContent = 'Not analyzed';
+          textureText.textContent = 'Not analyzed';
+          imageSizeText.textContent = 'Not analyzed';
+        }
+        
+        // Clear and update treatments list with fallback
+        treatmentsList.innerHTML = '';
+        if (Array.isArray(data.treatments) && data.treatments.length > 0) {
+          data.treatments.forEach(treatment => {
+            const li = document.createElement('li');
+            li.textContent = treatment;
+            treatmentsList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'Please consult a healthcare professional for treatment recommendations';
+          treatmentsList.appendChild(li);
+        }
+        
+        // Update disclaimer if provided
+        const disclaimer = document.getElementById('disclaimer');
+        if (data.disclaimer) {
+          disclaimer.innerHTML = `<p>⚠️ <em>${data.disclaimer}</em></p>`;
+        }
+      } catch (error) {
+        detectBtn.textContent = '🔍 Detect Disease';
+        detectBtn.disabled = false;
+        alert('Error analyzing image: ' + error.message);
+        return;
+      }
+      
+      resultBox.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
