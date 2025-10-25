@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyuScan — Patient Management</title>
+  <style>
+    :root{
+      --bg:#f7f7f6;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0ea5a1;
+      --danger:#ef4444;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:#111827}
+    .container{max-width:1100px;margin:24px auto;padding:16px}
+    header{display:flex;align-items:center;gap:12px}
+    .brand{font-weight:700;font-size:18px}
+    .tag{font-size:12px;color:var(--muted)}
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+    .center{display:flex;align-items:center;justify-content:center}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* layout */
+    .row{display:flex;gap:16px}
+    .col{flex:1}
+
+    /* login/signup */
+    .auth-box{max-width:420px;margin:28px auto}
+    input, select, textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef0;margin-top:8px}
+    label{font-weight:600;font-size:13px}
+    .btn{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer;margin-top:12px}
+    .btn-muted{background:#eef2f2;color:#044640}
+    .link{color:var(--accent);cursor:pointer;text-decoration:underline;font-weight:600}
+
+    /* dashboard grid */
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+    @media(min-width:900px){.grid{grid-template-columns:360px 1fr}}
+
+    .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .icon{width:56px;height:56px;border-radius:10px;background:#eef7f7;display:flex;align-items:center;justify-content:center;font-weight:700;color:#04605b}
+    .log{margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(90deg,#ffffff,#fbfbfb);font-size:13px;min-height:90px;border:1px solid #eef2f2}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal{width:100%;max-width:540px;background:var(--card);border-radius:12px;padding:16px}
+
+    /* simple nav */
+    nav{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
+    .nav-btn{background:none;border:0;color:var(--accent);font-weight:700;cursor:pointer}
+
+    /* hidden */
+    .hidden{display:none}
+    
+    /* language selector */
+    .language-selector {
+      position: relative;
+      display: inline-block;
+    }
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 8px 0;
+      z-index: 100;
+      min-width: 120px;
+      display: none;
+    }
+    .language-dropdown.show {
+      display: block;
+    }
+    .language-option {
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .language-option:hover {
+      background: #f0f7f7;
+    }
+    .current-language {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #f0f7f7;
+    }
+    .flag {
+      width: 20px;
+      height: 15px;
+      border-radius: 2px;
+    }
+
+    /* Patient management styles */
+    .patient-form { margin-top: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .patient-history { margin-top: 20px; }
+    .history-item { 
+      padding: 12px; 
+      border: 1px solid #eef2f2; 
+      border-radius: 8px; 
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+    .scan-preview {
+      height: 200px;
+      border: 2px dashed #e6eef0;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      background: #f8fafc;
+    }
+    .upload-area {
+      border: 2px dashed #0ea5a1;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      margin-top: 15px;
+      background: #f0fdfa;
+    }
+    .patient-info {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+
+    <!-- Header -->
+    <header>
+      <div style="flex:1">
+        <div class="brand" data-key="brand">AyuScan</div>
+        <div class="tag" data-key="tagline">Village → ASHA → Scan → Doctor Cloud</div>
+      </div>
+      <div id="topRight" class="center">
+        <!-- populated dynamically -->
+      </div>
+      <div class="language-selector">
+        <div class="current-language" id="currentLanguage">
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmIi8+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmY5OTMzIi8+PHJlY3QgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzEzODgwOCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiMwMDAwODAiLz48L3N2Zz4=" class="flag" alt="IN">
+          <span id="currentLangText">English</span>
+          <span>▼</span>
+        </div>
+        <div class="language-dropdown" id="languageDropdown">
+          <div class="language-option" data-lang="en">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmIi8+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmY5OTMzIi8+PHJlY3QgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzEzODgwOCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiMwMDAwODAiLz48L3N2Zz4=" class="flag" alt="IN">
+            <span>English</span>
+          </div>
+          <div class="language-option" data-lang="hi">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmIi8+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmY5OTMzIi8+PHJlY3QgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzEzODgwOCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiMwMDAwODAiLz48L3N2Zz4=" class="flag" alt="IN">
+            <span>हिन्दी</span>
+          </div>
+          <div class="language-option" data-lang="kn">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjZmZmIi8+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZmY5OTMzIi8+PHJlY3QgeT0iMjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxMCIgZmlsbD0iIzEzODgwOCIvPjxjaXJjbGUgY3g9IjMwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiMwMDAwODAiLz48L3N2Zz4=" class="flag" alt="IN">
+            <span>ಕನ್ನಡ</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation (simple) -->
+    <nav id="navBar" class="hidden">
+      <button class="nav-btn" onclick="goTo('profile')" data-key="navProfile">Profile</button>
+      <button class="nav-btn" onclick="goTo('dashboard')" data-key="navDashboard">Dashboard</button>
+      <button class="nav-btn" onclick="logout()" data-key="navLogout">Logout</button>
+    </nav>
+
+    <!-- AUTH: Login -->
+    <div id="view-login" class="auth-box card">
+      <h2 data-key="loginTitle">Login – Mobile OTP</h2>
+      <div class="muted" data-key="loginDesc">Enter your mobile number. We'll send a one-time PIN (simulated for demo).</div>
+
+      <label data-key="mobileLabel">Mobile Number</label>
+      <input id="loginMobile" placeholder="e.g., 98XXXXXXXX" inputmode="numeric" />
+
+      <div id="otpSection" class="hidden">
+        <label data-key="otpLabel">Enter OTP</label>
+        <input id="loginOtp" placeholder="4-digit code" inputmode="numeric" />
+      </div>
+
+      <button id="sendOtpBtn" class="btn" onclick="sendOtp()" data-key="sendOtpBtn">Send OTP</button>
+      <button id="verifyOtpBtn" class="btn hidden" onclick="verifyOtp()" data-key="verifyOtpBtn">Verify OTP</button>
+
+      <div style="margin-top:10px">
+        <span class="muted" data-key="newUserText">New here?</span>
+        <span class="link" onclick="goTo('signup')" data-key="createAccountLink">Create an account</span>
+      </div>
+    </div>
+
+    <!-- AUTH: Signup -->
+    <div id="view-signup" class="auth-box card hidden">
+      <h2 data-key="signupTitle">Create ASHA Account</h2>
+      <div class="muted" data-key="signupDesc">Fill details to register.</div>
+
+      <label data-key="nameLabel">Full Name</label>
+      <input id="suName" />
+
+      <label data-key="ashaIdLabel">ASHA Worker ID</label>
+      <input id="suAshaId" />
+
+      <label data-key="mobileLabel">Mobile Number</label>
+      <input id="suMobile" inputmode="numeric" />
+
+      <label data-key="educationLabel">Education Qualification</label>
+      <input id="suEducation" placeholder="e.g., ANM, GNM, 12th pass" />
+
+      <label data-key="yearsLabel">Years of Service</label>
+      <input id="suYears" type="number" min="0" />
+
+      <label data-key="villageLabel">Village / PHC Assigned</label>
+      <input id="suVillage" />
+
+      <label data-key="passwordLabel">Password</label>
+      <input id="suPassword" type="password" />
+
+      <label data-key="confirmPasswordLabel">Confirm Password</label>
+      <input id="suPassword2" type="password" />
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn" onclick="createAccount()" data-key="createAccountBtn">Create Account</button>
+        <button class="btn-muted" onclick="goTo('login')" data-key="backToLoginBtn">Back to login</button>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="view-profile" class="card hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div id="profileAvatar" class="avatar">A</div>
+          <div>
+            <div id="profileName" style="font-weight:700;font-size:18px">ASHA Worker</div>
+            <div class="muted" id="profileAshaId">ID: -</div>
+          </div>
+        </div>
+        <div>
+          <button class="btn" onclick="goTo('dashboard')" data-key="goToDashboardBtn">Go to Dashboard</button>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0" />
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:18px">
+        <div>
+          <label data-key="nameLabel">Full Name</label>
+          <input id="pfName" />
+
+          <label data-key="ashaIdLabel">ASHA Worker ID</label>
+          <input id="pfAshaId" />
+
+          <label data-key="mobileLabel">Mobile Number</label>
+          <input id="pfMobile" />
+
+          <label data-key="educationLabel">Education</label>
+          <input id="pfEducation" />
+
+          <label data-key="yearsLabel">Years of Service</label>
+          <input id="pfYears" type="number" />
+
+          <label data-key="villageLabel">Village / PHC</label>
+          <input id="pfVillage" />
+
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn" onclick="saveProfile()" data-key="saveProfileBtn">Save Profile</button>
+            <button class="btn-muted" onclick="resetProfile()" data-key="resetBtn">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <label data-key="photoLabel">Profile Photo</label>
+          <div style="margin-top:8px">
+            <input type="file" id="pfPhoto" accept="image/*" onchange="loadProfilePhoto(event)" />
+          </div>
+          <div style="margin-top:12px" id="photoPreview"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD (main UI) -->
+    <div id="view-dashboard" class="hidden">
+      <div class="grid">
+        <!-- Left column -->
+        <div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div id="dashAvatar" class="avatar">A</div>
+              <div>
+                <div id="dashName" style="font-weight:700">ASHA Worker</div>
+                <div class="muted" id="dashMobile">+91 -</div>
+              </div>
+            </div>
+
+            <!-- Patient Management Section -->
+            <div class="patient-form">
+              <h3 data-key="patientSearchTitle">Find Patient</h3>
+              
+              <div class="form-group">
+                <label data-key="patientNameLabel">Patient Name</label>
+                <input type="text" id="patientName" placeholder="Enter patient name">
+              </div>
+              
+              <div class="form-group">
+                <label data-key="patientPhoneLabel">Phone Number</label>
+                <input type="tel" id="patientPhone" placeholder="Enter phone number">
+              </div>
+              
+              <button class="btn" onclick="findPatient()" data-key="findPatientBtn">Find Patient</button>
+              
+              <!-- User Information Card -->
+              <div id="userInfoCard" class="card" style="margin-top: 20px; display: none;">
+                <h3>Patient Information</h3>
+                <div id="userInfo"></div>
+                <div id="diseaseHistory" style="margin-top: 10px;">
+                  <h4>Disease History</h4>
+                  <div id="diseaseList"></div>
+                </div>
+                <button class="btn" onclick="goToDiseaseDection()" style="margin-top: 15px;">Disease Detection by AI</button>
+              </div>
+
+              
+              <!-- Patient Info Display -->
+              <div id="patientInfo" class="patient-info hidden">
+                <h4 data-key="patientInfoTitle">Patient Information</h4>
+                <div id="patientDetails"></div>
+              </div>
+              
+              <!-- Patient History -->
+              <div id="patientHistory" class="patient-history hidden">
+                <h4 data-key="patientHistoryTitle">Medical History</h4>
+                <div id="historyList"></div>
+              </div>
+              
+              <!-- New Scan Section -->
+              <div id="newScanSection" class="hidden">
+                <h4 data-key="newScanTitle">New Medical Scan</h4>
+                
+                <div class="form-group">
+                  <label data-key="symptomsLabel">Symptoms/Description</label>
+                  <textarea id="symptoms" rows="3" placeholder="Describe symptoms or condition"></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label data-key="uploadImageLabel">Upload Scan Image</label>
+                  <div class="upload-area" onclick="document.getElementById('scanImage').click()">
+                    <div style="font-size: 48px; color: var(--accent);">📷</div>
+                    <div data-key="uploadText">Click to upload scan image</div>
+                    <div class="muted" data-key="uploadDesc">Supported formats: JPG, PNG</div>
+                  </div>
+                  <input type="file" id="scanImage" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+                </div>
+                
+                <div id="imagePreview" class="scan-preview hidden">
+                  <div style="text-align:center;color:var(--muted)">
+                    <div style="font-weight:700" data-key="imagePreviewTitle">Image Preview</div>
+                  </div>
+                </div>
+                
+                <button class="btn" onclick="savePatientRecord()" data-key="saveRecordBtn">Save Patient Record</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="workflow">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h3 style="margin:0" data-key="featuresTitle">Features</h3>
+                <div class="muted" style="margin-top:4px" data-key="featuresDesc">Smart scanning for rural healthcare</div>
+              </div>
+              <div style="text-align:right">
+                <div class="muted" data-key="scanFeeText">Scan Fee</div>
+                <div style="font-weight:700" data-key="feeAmount">Normal ₹30 • Priority ₹150</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;display:grid;gap:10px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">1</div>
+                <div><div style="font-weight:700" data-key="feature1Title">Easy Scanning</div><div class="muted" data-key="feature1Desc">ASHA captures image using smartphone + lens attachment</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">2</div>
+                <div><div style="font-weight:700" data-key="feature2Title">AI Analysis</div><div class="muted" data-key="feature2Desc">On-device AI gives preliminary result & urgency flag</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">3</div>
+                <div><div style="font-weight:700" data-key="feature3Title">Instant Feedback</div><div class="muted" data-key="feature3Desc">ASHA receives doctor advice and communicates to patient</div></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="icon">4</div>
+                <div><div style="font-weight:700" data-key="feature4Title">Priority Service</div><div class="muted" data-key="feature4Desc">Urgent cases get immediate doctor attention</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer data-key="footerText">Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export.</footer>
+    </div>
+
+  </div>
+
+  <script>
+    // ---------- Language Support ----------
+    const translations = {
+      en: {
+        // Header
+        brand: "AyuScan",
+        tagline: "Village → ASHA → Scan → Doctor Cloud",
+        
+        // Navigation
+        navProfile: "Profile",
+        navDashboard: "Dashboard",
+        navLogout: "Logout",
+        
+        // Login
+        loginTitle: "Login – Mobile OTP",
+        loginDesc: "Enter your mobile number. We'll send a one-time PIN (simulated for demo).",
+        mobileLabel: "Mobile Number",
+        otpLabel: "Enter OTP",
+        sendOtpBtn: "Send OTP",
+        verifyOtpBtn: "Verify OTP",
+        newUserText: "New here?",
+        createAccountLink: "Create an account",
+        
+        // Signup
+        signupTitle: "Create ASHA Account",
+        signupDesc: "Fill details to register.",
+        nameLabel: "Full Name",
+        ashaIdLabel: "ASHA Worker ID",
+        educationLabel: "Education Qualification",
+        yearsLabel: "Years of Service",
+        villageLabel: "Village / PHC Assigned",
+        passwordLabel: "Password",
+        confirmPasswordLabel: "Confirm Password",
+        createAccountBtn: "Create Account",
+        backToLoginBtn: "Back to login",
+        
+        // Profile
+        goToDashboardBtn: "Go to Dashboard",
+        saveProfileBtn: "Save Profile",
+        resetBtn: "Reset",
+        photoLabel: "Profile Photo",
+        
+        // Patient Management
+        patientSearchTitle: "Find Patient",
+        patientNameLabel: "Patient Name",
+        patientPhoneLabel: "Phone Number",
+        findPatientBtn: "Find Patient",
+        patientInfoTitle: "Patient Information",
+        patientHistoryTitle: "Medical History",
+        newScanTitle: "New Medical Scan",
+        symptomsLabel: "Symptoms/Description",
+        uploadImageLabel: "Upload Scan Image",
+        uploadText: "Click to upload scan image",
+        uploadDesc: "Supported formats: JPG, PNG",
+        imagePreviewTitle: "Image Preview",
+        saveRecordBtn: "Save Patient Record",
+        
+        // Dashboard
+        lastActionText: "Last action:",
+        featuresTitle: "Features",
+        featuresDesc: "Smart scanning for rural healthcare",
+        scanFeeText: "Scan Fee",
+        feeAmount: "Normal ₹30 • Priority ₹150",
+        feature1Title: "Easy Scanning",
+        feature1Desc: "ASHA captures image using smartphone + lens attachment",
+        feature2Title: "AI Analysis",
+        feature2Desc: "On-device AI gives preliminary result & urgency flag",
+        feature3Title: "Instant Feedback",
+        feature3Desc: "ASHA receives doctor advice and communicates to patient",
+        feature4Title: "Priority Service",
+        feature4Desc: "Urgent cases get immediate doctor attention",
+        footerText: "Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export."
+      },
+      hi: {
+        // Header
+        brand: "आयुस्कैन",
+        tagline: "गाँव → आशा → स्कैन → डॉक्टर क्लाउड",
+        
+        // Navigation
+        navProfile: "प्रोफाइल",
+        navDashboard: "डैशबोर्ड",
+        navLogout: "लॉग आउट",
+        
+        // Login
+        loginTitle: "लॉगिन – मोबाइल ओटीपी",
+        loginDesc: "अपना मोबाइल नंबर दर्ज करें। हम एक बार का पिन भेजेंगे (डेमो के लिए अनुकरण)।",
+        mobileLabel: "मोबाइल नंबर",
+        otpLabel: "ओटीपी दर्ज करें",
+        sendOtpBtn: "ओटीपी भेजें",
+        verifyOtpBtn: "ओटीपी सत्यापित करें",
+        newUserText: "नए यहाँ हैं?",
+        createAccountLink: "खाता बनाएं",
+        
+        // Signup
+        signupTitle: "आशा खाता बनाएं",
+        signupDesc: "पंजीकरण के लिए विवरण भरें।",
+        nameLabel: "पूरा नाम",
+        ashaIdLabel: "आशा कार्यकर्ता आईडी",
+        educationLabel: "शैक्षिक योग्यता",
+        yearsLabel: "सेवा के वर्ष",
+        villageLabel: "गाँव / पीएचसी सौंपा गया",
+        passwordLabel: "पासवर्ड",
+        confirmPasswordLabel: "पासवर्ड की पुष्टि करें",
+        createAccountBtn: "खाता बनाएं",
+        backToLoginBtn: "लॉगिन पर वापस जाएं",
+        
+        // Profile
+        goToDashboardBtn: "डैशबोर्ड पर जाएं",
+        saveProfileBtn: "प्रोफाइल सहेजें",
+        resetBtn: "रीसेट",
+        photoLabel: "प्रोफाइल फोटो",
+        
+        // Patient Management
+        patientSearchTitle: "रोगी ढूंढें",
+        patientNameLabel: "रोगी का नाम",
+        patientPhoneLabel: "फोन नंबर",
+        findPatientBtn: "रोगी ढूंढें",
+        patientInfoTitle: "रोगी की जानकारी",
+        patientHistoryTitle: "चिकित्सा इतिहास",
+        newScanTitle: "नई मेडिकल स्कैन",
+        symptomsLabel: "लक्षण/विवरण",
+        uploadImageLabel: "स्कैन छवि अपलोड करें",
+        uploadText: "स्कैन छवि अपलोड करने के लिए क्लिक करें",
+        uploadDesc: "समर्थित प्रारूप: JPG, PNG",
+        imagePreviewTitle: "छवि पूर्वावलोकन",
+        saveRecordBtn: "रोगी रिकॉर्ड सहेजें",
+        
+        // Dashboard
+        lastActionText: "अंतिम कार्रवाई:",
+        featuresTitle: "विशेषताएं",
+        featuresDesc: "ग्रामीण स्वास्थ्य सेवा के लिए स्मार्ट स्कैनिंग",
+        scanFeeText: "स्कैन शुल्क",
+        feeAmount: "सामान्य ₹30 • प्राथमिकता ₹150",
+        feature1Title: "आसान स्कैनिंग",
+        feature1Desc: "आशा स्मार्टफोन + लेंस का उपयोग कर छवि कैप्चर करती है",
+        feature2Title: "एआई विश्लेषण",
+        feature2Desc: "डिवाइस पर एआई प्रारंभिक परिणाम और तात्कालिकता ध्वज देता है",
+        feature3Title: "तत्काल प्रतिक्रिया",
+        feature3Desc: "आशा को डॉक्टर की सलाह मिलती है और रोगी को संप्रेषित करती है",
+        feature4Title: "प्राथमिकता सेवा",
+        feature4Desc: "तत्काल मामलों को तुरंत डॉक्टर की सहायता मिलती है",
+        footerText: "प्रोटोटाइप UI — कैनवा या PowerPoint निर्यात के लिए इस HTML/CSS को अनुकूलित करें।"
+      },
+      kn: {
+        // Header
+        brand: "ಆಯುಸ್ಕ್ಯಾನ್",
+        tagline: "ಗ್ರಾಮ → ಆಶಾ → ಸ್ಕ್ಯಾನ್ → ಡಾಕ್ಟರ್ ಕ್ಲೌಡ್",
+        
+        // Navigation
+        navProfile: "ಪ್ರೊಫೈಲ್",
+        navDashboard: "ಡ್ಯಾಶ್ಬೋರ್ಡ್",
+        navLogout: "ಲಾಗ್ ಔಟ್",
+        
+        // Login
+        loginTitle: "ಲಾಗಿನ್ – ಮೊಬೈಲ್ OTP",
+        loginDesc: "ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ. ನಾವು ಒಂದು-ಬಾರಿ ಪಿನ್ ಕಳುಹಿಸುತ್ತೇವೆ (ಡೆಮೊಗಾಗಿ ಅನುಕರಣೆ).",
+        mobileLabel: "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+        otpLabel: "OTP ನಮೂದಿಸಿ",
+        sendOtpBtn: "OTP ಕಳುಹಿಸಿ",
+        verifyOtpBtn: "OTP ಪರಿಶೀಲಿಸಿ",
+        newUserText: "ಹೊಸಬರೇ?",
+        createAccountLink: "ಖಾತೆ ರಚಿಸಿ",
+        
+        // Signup
+        signupTitle: "ಆಶಾ ಖಾತೆ ರಚಿಸಿ",
+        signupDesc: "ನೋಂದಣಿಗಾಗಿ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ.",
+        nameLabel: "ಪೂರ್ಣ ಹೆಸರು",
+        ashaIdLabel: "ಆಶಾ ಕಾರ್ಮಿಕ ID",
+        educationLabel: "ಶಿಕ್ಷಣ ಅರ್ಹತೆ",
+        yearsLabel: "ಸೇವೆಯ ವರ್ಷಗಳು",
+        villageLabel: "ಗ್ರಾಮ / PHC ನಿಯೋಜಿಸಲಾಗಿದೆ",
+        passwordLabel: "ಪಾಸ್ವರ್ಡ್",
+        confirmPasswordLabel: "ಪಾಸ್ವರ್ಡ್ ದೃಢೀಕರಿಸಿ",
+        createAccountBtn: "ಖಾತೆ ರಚಿಸಿ",
+        backToLoginBtn: "ಲಾಗಿನ್ಗೆ ಹಿಂತಿರುಗಿ",
+        
+        // Profile
+        goToDashboardBtn: "ಡ್ಯಾಶ್ಬೋರ್ಡ್ಗೆ ಹೋಗಿ",
+        saveProfileBtn: "ಪ್ರೊಫೈಲ್ ಉಳಿಸಿ",
+        resetBtn: "ರೀಸೆಟ್",
+        photoLabel: "ಪ್ರೊಫೈಲ್ ಫೋಟೋ",
+        
+        // Patient Management
+        patientSearchTitle: "ರೋಗಿಯನ್ನು ಹುಡುಕಿ",
+        patientNameLabel: "ರೋಗಿಯ ಹೆಸರು",
+        patientPhoneLabel: "ಫೋನ್ ನಂಬರ",
+        findPatientBtn: "ರೋಗಿಯನ್ನು ಹುಡುಕಿ",
+        patientInfoTitle: "ರೋಗಿಯ ಮಾಹಿತಿ",
+        patientHistoryTitle: "ವೈದ್ಯಕೀಯ ಇತಿಹಾಸ",
+        newScanTitle: "ಹೊಸ ವೈದ್ಯಕೀಯ ಸ್ಕ್ಯಾನ್",
+        symptomsLabel: "ಲಕ್ಷಣಗಳು/ವಿವರಣೆ",
+        uploadImageLabel: "ಸ್ಕ್ಯಾನ್ ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+        uploadText: "ಸ್ಕ್ಯಾನ್ ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ",
+        uploadDesc: "ಬೆಂಬಲಿತ ರೂಪಗಳು: JPG, PNG",
+        imagePreviewTitle: "ಚಿತ್ರ ಪೂರ್ವವೀಕ್ಷಣೆ",
+        saveRecordBtn: "ರೋಗಿ ರೆಕಾರ್ಡ್ ಸೇವ್ ಮಾಡಿ",
+        
+        // Dashboard
+        lastActionText: "ಕೊನೆಯ ಕ್ರಿಯೆ:",
+        featuresTitle: "ವೈಶಿಷ್ಟ್ಯಗಳು",
+        featuresDesc: "ಗ್ರಾಮೀಣ ಆರೋಗ್ಯ ಸಂರಕ್ಷಣೆಗೆ ಸ್ಮಾರ್ಟ್ ಸ್ಕ್ಯಾನಿಂಗ್",
+        scanFeeText: "ಸ್ಕ್ಯಾನ್ ಶುಲ್ಕ",
+        feeAmount: "ಸಾಮಾನ್ಯ ₹30 • ಪ್ರಾಥಮಿಕತೆ ₹150",
+        feature1Title: "ಸುಲಭ ಸ್ಕ್ಯಾನಿಂಗ್",
+        feature1Desc: "ಆಶಾ ಸ್ಮಾರ್ಟ್ಫೋನ್ + ಲೆನ್ಸ್ ಬಳಸಿ ಚಿತ್ರವನ್ನು ಕ್ಯಾಪ್ಚರ್ ಮಾಡುತ್ತಾರೆ",
+        feature2Title: "AI ವಿಶ್ಲೇಷಣೆ",
+        feature2Desc: "ಡಿವೈಸ್ನಲ್ಲಿರುವ AI ಪ್ರಾಥಮಿಕ ಫಲಿತಾಂಶ ಮತ್ತು ತುರ್ತು ಫ್ಲ್ಯಾಗ್ ನೀಡುತ್ತದೆ",
+        feature3Title: "ತ್ವರಿತ ಪ್ರತಿಕ್ರಿಯೆ",
+        feature3Desc: "ಆಶಾಗೆ ಡಾಕ್ಟರ್ ಸಲಹೆ ಸಿಕ್ಕು ರೋಗಿಗೆ ತಿಳಿಸುತ್ತಾರೆ",
+        feature4Title: "ಪ್ರಾಥಮಿಕತೆ ಸೇವೆ",
+        feature4Desc: "ತುರ್ತು ಪ್ರಕರಣಗಳಿಗೆ ತಕ್ಷಣ ಡಾಕ್ಟರ್ ಗಮನ ಸಿಗುತ್ತದೆ",
+        footerText: "ಪ್ರೋಟೋಟೈಪ್ UI — ಕ್ಯಾನ್ವಾ ಅಥವಾ PowerPoint ರಫ್ತುಗಾಗಿ ಈ HTML/CSS ಅನ್ನು ಅಳವಡಿಸಿಕೊಳ್ಳಿ."
+      }
+    };
+
+    // Current language
+    let currentLanguage = 'en';
+
+    // Language functions
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      localStorage.setItem('ayuscan_language', lang);
+      updateLanguageUI();
+      translatePage();
+    }
+
+    function updateLanguageUI() {
+      const langTexts = {
+        en: 'English',
+        hi: 'हिन्दी',
+        kn: 'ಕನ್ನಡ'
+      };
+      document.getElementById('currentLangText').textContent = langTexts[currentLanguage];
+    }
+
+    function translatePage() {
+      const elements = document.querySelectorAll('[data-key]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-key');
+        if (translations[currentLanguage] && translations[currentLanguage][key]) {
+          if (element.tagName === 'INPUT' && element.hasAttribute('placeholder')) {
+            element.placeholder = translations[currentLanguage][key];
+          } else {
+            element.textContent = translations[currentLanguage][key];
+          }
+        }
+      });
+    }
+
+    // Language selector toggle
+    document.getElementById('currentLanguage').addEventListener('click', function() {
+      document.getElementById('languageDropdown').classList.toggle('show');
+    });
+
+    // Language option selection
+    document.querySelectorAll('.language-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang');
+        setLanguage(lang);
+        document.getElementById('languageDropdown').classList.remove('show');
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const languageSelector = document.querySelector('.language-selector');
+      if (!languageSelector.contains(event.target)) {
+        document.getElementById('languageDropdown').classList.remove('show');
+      }
+    });
+
+    // ---------- Patient Management Functions ----------
+    let currentPatient = null;
+    let currentScanImage = null;
+    function findPatient() {
+      const name = document.getElementById('patientName').value.trim();
+      const phone = document.getElementById('patientPhone').value.trim();
+      
+      if (!name && !phone) {
+        alert('Please enter patient name or phone number');
+        return;
+      }
+
+      // Try to add/find patient in MongoDB
+      fetch('/add_patient', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          phone: phone
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Show popup message
+        alert(data.message);
+        
+        if (data.user) {
+          // Use the userInfoCard as the single source of patient info and disease history
+          const user = data.user;
+          currentPatient = user;
+          displayUserInfo(user);
+
+          // Display disease history inside the userInfoCard only
+          if (user.diseases && user.diseases.length > 0) {
+            displayDiseaseHistory(user.diseases);
+          } else {
+            // clear disease list if none
+            const diseaseList = document.getElementById('diseaseList');
+            if (diseaseList) diseaseList.innerHTML = '<p class="muted">No disease records found.</p>';
+          }
+
+          // Ensure the separate patientInfo card is hidden to avoid duplicate info
+          const patientInfoEl = document.getElementById('patientInfo');
+          if (patientInfoEl) patientInfoEl.classList.add('hidden');
+
+          // Show the main userInfoCard with AI detection button
+          document.getElementById('userInfoCard').style.display = 'block';
+        } else {
+          // Hide user info if there's no user data
+          document.getElementById('userInfoCard').style.display = 'none';
+          currentPatient = null;
+        }
+        appendLog(`Patient ${data.success ? 'added to' : 'found in'} database: ${name}`);
+      })
+      .catch(error => {
+        console.error('Error with patient database:', error);
+        appendLog(`Error with patient database: ${error.message}`);
+        alert('Error: ' + error.message);
+      });
+    }
+
+    function displayUserInfo(patient) {
+      const userInfo = document.getElementById('userInfo');
+      userInfo.innerHTML = `
+        <div class="info-item"><strong>Name:</strong> ${patient.username || patient.name}</div>
+        <div class="info-item"><strong>Phone:</strong> ${patient.phone}</div>
+        <div class="info-item"><strong>Status:</strong> ${patient.diseases && patient.diseases.length > 0 ? 'Has medical history' : 'No medical history'}</div>
+      `;
+    }
+
+    function displayDiseaseHistory(diseases) {
+      const diseaseList = document.getElementById('diseaseList');
+      if (!diseases || diseases.length === 0) {
+        diseaseList.innerHTML = '<p class="muted">No disease records found. Use AI Detection to add medical records.</p>';
+        return;
+      }
+
+      const historyHtml = diseases.map(disease => `
+        <div class="history-item">
+          <div><strong>Disease:</strong> ${disease.name}</div>
+          <div><strong>Detected:</strong> ${new Date(disease.detected_at).toLocaleDateString()}</div>
+        </div>
+      `).join('');
+
+      diseaseList.innerHTML = historyHtml;
+    }
+    
+    // Add some CSS styles for better display
+    const style = document.createElement('style');
+    style.textContent = `
+      .info-item {
+        margin: 8px 0;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 6px;
+      }
+      .history-item {
+        margin: 10px 0;
+        padding: 12px;
+        background: #f0f7f7;
+        border-radius: 8px;
+        border-left: 4px solid #0ea5a1;
+      }
+      .muted {
+        color: #6c757d;
+        font-style: italic;
+      }
+    `;
+    document.head.appendChild(style);
+
+    function goToDiseaseDection() {
+      if (!currentPatient) {
+        alert('Please find or create a patient first');
+        return;
+      }
+      
+      // Store a normalized patient object in localStorage for the detection page
+      const normalized = {
+        name: currentPatient.username || currentPatient.name || currentPatient.username,
+        phone: currentPatient.phone || currentPatient.phone
+      };
+      localStorage.setItem('currentPatient', JSON.stringify(normalized));
+      window.location.href = '{{ url_for("detect") }}';
+    }
+
+    function displayPatientInfo(patient) {
+      const patientInfo = document.getElementById('patientInfo');
+      const patientDetails = document.getElementById('patientDetails');
+      
+      patientDetails.innerHTML = `
+        <div><strong>Name:</strong> ${patient.name}</div>
+        <div><strong>Phone:</strong> ${patient.phone}</div>
+        <div><strong>Total Visits:</strong> ${patient.history ? patient.history.length : 0}</div>
+        <div><strong>Last Visit:</strong> ${patient.history && patient.history.length > 0 ? 
+          new Date(patient.history[patient.history.length-1].date).toLocaleDateString() : 'Never'}</div>
+      `;
+      
+      patientInfo.classList.remove('hidden');
+    }
+
+    function displayPatientHistory(patient) {
+      const patientHistory = document.getElementById('patientHistory');
+      const historyList = document.getElementById('historyList');
+      
+      if (!patient.history || patient.history.length === 0) {
+        historyList.innerHTML = '<div class="muted">No medical history found</div>';
+      } else {
+        historyList.innerHTML = patient.history.map(record => `
+          <div class="history-item">
+            <div><strong>Date:</strong> ${new Date(record.date).toLocaleDateString()}</div>
+            <div><strong>Symptoms:</strong> ${record.symptoms}</div>
+            <div><strong>Image:</strong> ${record.image ? 'Yes' : 'No'}</div>
+            ${record.aiAnalysis ? `<div><strong>AI Analysis:</strong> ${record.aiAnalysis}</div>` : ''}
+          </div>
+        `).join('');
+      }
+      
+      patientHistory.classList.remove('hidden');
+    }
+
+    function showNewScanSection() {
+      document.getElementById('newScanSection').classList.remove('hidden');
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentScanImage = e.target.result;
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `<img src="${currentScanImage}" alt="Scan preview" style="max-width:100%;max-height:100%;border-radius:8px" />`;
+        preview.classList.remove('hidden');
+        appendLog('Scan image uploaded');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function savePatientRecord() {
+      if (!currentPatient) {
+        alert('No patient selected');
+        return;
+      }
+      
+      const symptoms = document.getElementById('symptoms').value.trim();
+      if (!symptoms) {
+        alert('Please describe symptoms');
+        return;
+      }
+      
+      // Simulate AI analysis
+      const conditions = ['Fungal Infection', 'Bacterial Infection', 'Viral Rash', 'Allergic Reaction', 'Normal Skin'];
+      const confidence = Math.floor(70 + Math.random() * 25);
+      const aiAnalysis = `${conditions[Math.floor(Math.random() * conditions.length)]} (${confidence}% confidence)`;
+      
+      // Add the disease record to MongoDB
+      fetch('/add_disease', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: currentPatient.name,
+          disease_name: aiAnalysis
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Reset form
+        document.getElementById('symptoms').value = '';
+        document.getElementById('scanImage').value = '';
+        document.getElementById('imagePreview').classList.add('hidden');
+        currentScanImage = null;
+        
+        appendLog(`New record saved for ${currentPatient.name}. AI Analysis: ${aiAnalysis}`);
+        alert('Patient record saved successfully!');
+      })
+      .catch(error => {
+        alert('Error saving patient record: ' + error.message);
+      });
+    }
+
+    // ---------- Simple client-side auth & storage ----------
+    // Users are stored in localStorage as {mobile: {...profile..., password}}
+    const LS_USERS = 'ayuscan_users_v1';
+    const LS_CURRENT = 'ayuscan_current_user_v1';
+
+    // Utility helpers
+    function qs(id){ return document.getElementById(id) }
+    function showView(viewId){
+      // hide all view-* elements
+      const views = document.querySelectorAll('[id^="view-"], #view-dashboard, #view-profile');
+      views.forEach(v => v.classList.add('hidden'));
+      // show requested view
+      qs(viewId === 'dashboard' ? 'view-dashboard' : (viewId === 'profile' ? 'view-profile' : ('view-' + viewId))).classList.remove('hidden');
+
+      // toggle nav
+      const nav = qs('navBar');
+      if(viewId === 'login' || viewId === 'signup') nav.classList.add('hidden'); else nav.classList.remove('hidden');
+    }
+
+    function loadUsers(){
+      try { return JSON.parse(localStorage.getItem(LS_USERS) || '{}'); }
+      catch(e){ return {}; }
+    }
+    function saveUsers(u){ localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+
+    function setCurrentUser(mobile){
+      localStorage.setItem(LS_CURRENT, mobile);
+      renderTopRight();
+    }
+    function getCurrentUser(){
+      return localStorage.getItem(LS_CURRENT);
+    }
+    function clearCurrentUser(){
+      localStorage.removeItem(LS_CURRENT);
+      renderTopRight();
+    }
+
+    // Navigation helper
+    function goTo(view){
+      if(view === 'login') {
+        showView('login');
+      } else if(view === 'signup') {
+        showView('signup');
+      } else if(view === 'dashboard') {
+        populateDashboard();
+        showView('dashboard');
+      } else if(view === 'profile') {
+        populateProfile();
+        showView('profile');
+      }
+    }
+
+    // initial startup view
+    (function init(){
+      // Set language from storage or default to English
+      const savedLang = localStorage.getItem('ayuscan_language');
+      if (savedLang) {
+        setLanguage(savedLang);
+      } else {
+        setLanguage('en');
+      }
+      
+      // if logged in -> dashboard else login
+      if(getCurrentUser()){
+        goTo('dashboard');
+      } else {
+        goTo('login');
+      }
+    })();
+
+    // Top-right header area
+    function renderTopRight(){
+      const top = qs('topRight');
+      const cur = getCurrentUser();
+      top.innerHTML = '';
+      if(cur){
+        const users = loadUsers();
+        const u = users[cur];
+        const span = document.createElement('div');
+        span.style.display = 'flex'; span.style.gap = '12px'; span.style.alignItems = 'center';
+        const small = document.createElement('div');
+        small.innerHTML = `<div style="font-weight:700">${u.name}</div><div class="muted">ASHA ID: ${u.ashaId}</div>`;
+        span.appendChild(small);
+        top.appendChild(span);
+      } else {
+        top.innerHTML = '<div class="muted">Not signed in</div>';
+      }
+    }
+
+    // ---------- Signup ----------
+    function createAccount(){
+      const name = qs('suName').value.trim();
+      const ashaId = qs('suAshaId').value.trim();
+      const mobile = qs('suMobile').value.trim();
+      const education = qs('suEducation').value.trim();
+      const years = qs('suYears').value.trim();
+      const village = qs('suVillage').value.trim();
+      const pw = qs('suPassword').value;
+      const pw2 = qs('suPassword2').value;
+
+      if(!name || !mobile || !ashaId || !pw) return alert('Please fill name, ASHA ID, mobile and password.');
+
+      if(pw !== pw2) return alert('Passwords do not match.');
+
+      const users = loadUsers();
+      if(users[mobile]) return alert('An account with this mobile already exists. Please login.');
+
+      users[mobile] = {
+        name, ashaId, mobile, education, years: years || 0, village, password: pw, photo: ''
+      };
+      saveUsers(users);
+      alert('Account created. Please login.');
+      // prefill login mobile
+      qs('loginMobile').value = mobile;
+      goTo('login');
+    }
+
+    // ---------- Login via OTP (simulated) ----------
+    let currentOtp = null;
+    function sendOtp(){
+      const mobile = qs('loginMobile').value.trim();
+      if(!mobile) return alert('Enter mobile number.');
+      const users = loadUsers();
+      if(!users[mobile]) return alert('No account found for this mobile. Create account first.');
+
+      // simulate OTP generation and "send"
+      currentOtp = String(Math.floor(1000 + Math.random()*9000));
+      console.log('Simulated OTP for demo:', currentOtp);
+      alert('Simulated OTP (for demo): ' + currentOtp);
+
+      // show OTP input
+      qs('otpSection').classList.remove('hidden');
+      qs('sendOtpBtn').classList.add('hidden');
+      qs('verifyOtpBtn').classList.remove('hidden');
+    }
+
+    function verifyOtp(){
+      const entered = qs('loginOtp').value.trim();
+      if(!entered) return alert('Enter OTP.');
+      if(entered !== currentOtp) return alert('Invalid OTP. Try again.');
+      // set as logged in
+      const mobile = qs('loginMobile').value.trim();
+      setCurrentUser(mobile);
+      currentOtp = null;
+      qs('loginOtp').value = '';
+      qs('loginMobile').value = '';
+      qs('otpSection').classList.add('hidden');
+      qs('sendOtpBtn').classList.remove('hidden');
+      qs('verifyOtpBtn').classList.add('hidden');
+      goTo('dashboard');
+      appendLog('Logged in as ' + mobile);
+    }
+
+    function logout(){
+      clearCurrentUser();
+      goTo('login');
+    }
+
+    // ---------- Profile handling ----------
+    function populateProfile(){
+      const cur = getCurrentUser();
+      if(!cur) { goTo('login'); return; }
+      const users = loadUsers();
+      const u = users[cur];
+      qs('profileName').textContent = u.name || 'ASHA Worker';
+      qs('profileAshaId').textContent = 'ID: ' + (u.ashaId || '-');
+
+      qs('pfName').value = u.name || '';
+      qs('pfAshaId').value = u.ashaId || '';
+      qs('pfMobile').value = u.mobile || '';
+      qs('pfEducation').value = u.education || '';
+      qs('pfYears').value = u.years || '';
+      qs('pfVillage').value = u.village || '';
+
+      if(u.photo){
+        qs('photoPreview').innerHTML = `<img src="${u.photo}" alt="photo" style="width:160px;border-radius:8px" />`;
+        qs('profileAvatar').textContent = '';
+        qs('dashAvatar').style.backgroundImage = `url(${u.photo})`;
+        qs('dashAvatar').textContent = '';
+      } else {
+        qs('photoPreview').innerHTML = '';
+        qs('profileAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+        qs('dashAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+      }
+      renderTopRight();
+    }
+
+    function saveProfile(){
+      const cur = getCurrentUser();
+      if(!cur) return alert('No user logged in');
+      const users = loadUsers();
+      const u = users[cur];
+      u.name = qs('pfName').value.trim();
+      u.ashaId = qs('pfAshaId').value.trim();
+      u.mobile = qs('pfMobile').value.trim();
+      u.education = qs('pfEducation').value.trim();
+      u.years = qs('pfYears').value.trim();
+      u.village = qs('pfVillage').value.trim();
+      users[cur] = u;
+      saveUsers(users);
+      alert('Profile saved.');
+      populateProfile();
+    }
+
+    function resetProfile(){
+      populateProfile();
+    }
+
+    function loadProfilePhoto(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const data = ev.target.result;
+        qs('photoPreview').innerHTML = `<img src="${data}" alt="photo" style="width:160px;border-radius:8px" />`;
+        // save in user record
+        const cur = getCurrentUser();
+        if(!cur) return;
+        const users = loadUsers();
+        users[cur].photo = data;
+        saveUsers(users);
+        populateProfile();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ---------- Dashboard population ----------
+    function populateDashboard(){
+      const cur = getCurrentUser();
+      if(!cur) { goTo('login'); return; }
+      const users = loadUsers();
+      const u = users[cur];
+      qs('dashName').textContent = u.name || 'ASHA Worker';
+      qs('dashMobile').textContent = '+91 ' + (u.mobile || '-');
+      if(u.photo){
+        qs('dashAvatar').style.backgroundImage = `url(${u.photo})`;
+        qs('dashAvatar').textContent = '';
+      } else {
+        qs('dashAvatar').style.backgroundImage = '';
+        qs('dashAvatar').textContent = (u.name||'A').charAt(0).toUpperCase();
+      }
+      renderTopRight();
+    }
+
+    // ---------- Log functionality ----------
+    const logEl = qs('log');
+
+    function appendLog(text) {
+      const t = document.createElement('div');
+      t.textContent = new Date().toLocaleTimeString() + ' — ' + text;
+      if(logEl) logEl.prepend(t);
+    }
+
+    // init small startup log
+    appendLog('AyuScan UI ready');
+  </script>
+</body>
+</html>

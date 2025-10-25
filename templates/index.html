@@ -9,16 +9,56 @@
 <body>
 
   <div class="container">
-    <h1>🧠 AI Skin Disease Detector</h1>
-    <p>Upload a skin image and let AI assist in predicting possible conditions.<br><small>(For educational use only)</small></p>
-
-    <div class="upload-box">
-      <input type="file" id="fileInput" accept="image/*">
-      <img id="preview" src="" alt="Preview will appear here">
-      <button id="detectBtn">🔍 Detect Disease</button>
+    <header class="hero">
+      <div class="hero-text">
+        <h1>AI Health Image Analyzer</h1>
+        <p>Upload an image and select the issue category &mdash; the AI will provide an analysis and suggested next steps.<br><small>(Educational use only &mdash; consult a professional)</small></p>
+      </div>
+    </header>
+    <div id="patientInfo" class="card" style="margin-bottom: 20px; padding: 15px;">
+      <h3>Patient Information</h3>
+      <div id="patientDetails">Loading patient details...</div>
     </div>
 
-    <div id="result" class="result-box hidden">
+    <div class="layout">
+      <section class="left-card card">
+        <h2>Upload & Options</h2>
+        <p class="muted">Choose an image and the relevant issue type</p>
+
+        <div class="upload-box">
+          <label class="file-label">
+            <input type="file" id="fileInput" accept="image/*">
+            <span class="file-btn">Choose Image</span>
+          </label>
+
+          <div class="controls">
+            <label for="categorySelect" class="select-label">Issue type</label>
+            <select id="categorySelect" aria-label="Issue type select">
+              <option value="other">other issue</option>
+              <option value="eye">Eye related issue</option>
+              <option value="oral">Oral related issue</option>
+              <option value="skin">skin</option>
+            </select>
+            <button id="detectBtn" class="primary">Detect</button>
+          </div>
+
+            <div class="extras">
+              <label for="ageInput" class="small">Age (optional)</label>
+              <input id="ageInput" type="number" min="0" placeholder="e.g. 35" />
+
+              <label for="extraInfo" class="small">Extra information (optional)</label>
+              <textarea id="extraInfo" rows="3" placeholder="Any relevant notes (duration, symptoms, medical history)"></textarea>
+            </div>
+
+          <div class="preview-wrap">
+            <img id="preview" src="" alt="Preview will appear here">
+            <p id="previewHint" class="muted small">Preview</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="right-card card">
+        <div id="result" class="result-box hidden">
       <h2>Prediction Result</h2>
       <p><strong>Disease:</strong> <span id="disease"></span></p>
       <p><strong>Confidence:</strong> <span id="confidence"></span>%</p>
@@ -36,19 +76,50 @@
           <ul id="treatments"></ul>
         </div>
         <div class="disclaimer">
-          <p>⚠️ <em>This is an AI-powered prediction tool for educational purposes only. 
-          Please consult a qualified healthcare professional for proper diagnosis and treatment.</em></p>
+          <p><strong>Warning:</strong> <em>This is an AI-powered prediction tool for educational purposes only. Please consult a qualified healthcare professional for proper diagnosis and treatment.</em></p>
         </div>
       </div>
+        </div>
+        <div id="resultPlaceholder" class="placeholder">
+          <p class="muted">No analysis yet. Upload an image and press Detect.</p>
+        </div>
+      </section>
     </div>
   </div>
 
   <script>
+    let currentPatient = null;
+    
+    // Load patient info from localStorage (normalize fields)
+    window.addEventListener('DOMContentLoaded', () => {
+      const patientJson = localStorage.getItem('currentPatient');
+      if (!patientJson) {
+        // No patient selected -> go back to home to select/create
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(patientJson);
+        // Normalize name field (backend may return `username` or `name`)
+        const displayName = parsed.name || parsed.username || parsed.username || parsed.fullname || 'Unknown';
+        const phone = parsed.phone || parsed.phone || 'Unknown';
+        currentPatient = { name: displayName, phone };
+
+        const detailsEl = document.getElementById('patientDetails');
+        // Replace content (prevents accidental duplicated append)
+        detailsEl.innerHTML = `\n          <p><strong>Name:</strong> ${currentPatient.name}</p>\n          <p><strong>Phone:</strong> ${currentPatient.phone}</p>\n        `;
+      } catch (err) {
+        console.error('Failed to parse patient data from storage', err);
+        window.location.href = '/';
+      }
+    });
+
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('preview');
     const detectBtn = document.getElementById('detectBtn');
     const resultBox = document.getElementById('result');
-    const diseaseText = document.getElementById('disease');
+  const diseaseText = document.getElementById('disease');
     const confidenceText = document.getElementById('confidence');
     const descriptionText = document.getElementById('description');
     const severityText = document.getElementById('severity');
@@ -56,8 +127,13 @@
     const colorToneText = document.getElementById('colorTone');
     const textureText = document.getElementById('texture');
     const imageSizeText = document.getElementById('imageSize');
+  const ageInput = document.getElementById('ageInput');
+  const extraInfo = document.getElementById('extraInfo');
 
-    let selectedFile;
+  let selectedFile;
+  const categorySelect = document.getElementById('categorySelect');
+  const previewHint = document.getElementById('previewHint');
+  const resultPlaceholder = document.getElementById('resultPlaceholder');
 
     fileInput.addEventListener('change', () => {
       selectedFile = fileInput.files[0];
@@ -66,6 +142,7 @@
         reader.onload = (e) => {
           preview.src = e.target.result;
           preview.style.display = 'block';
+          previewHint.style.display = 'block';
         };
         reader.readAsDataURL(selectedFile);
       }
@@ -77,8 +154,16 @@
         return;
       }
 
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  // include selected category
+  formData.append('category', categorySelect ? categorySelect.value : 'skin');
+  // include patient info
+  formData.append('patient_name', currentPatient.name);
+  formData.append('patient_phone', currentPatient.phone);
+  // include optional user info
+  if (ageInput && ageInput.value) formData.append('age', ageInput.value);
+  if (extraInfo && extraInfo.value) formData.append('extra_info', extraInfo.value);
 
       detectBtn.textContent = 'Detecting...';
       detectBtn.disabled = true;
@@ -91,14 +176,27 @@
           throw new Error(data.error);
         }
 
-        detectBtn.textContent = '🔍 Detect Disease';
+  detectBtn.textContent = '🔍 Detect';
         detectBtn.disabled = false;
 
         // Update basic information with fallbacks
         diseaseText.textContent = data.disease || 'Unknown';
         confidenceText.textContent = data.confidence || 0;
         descriptionText.textContent = data.description || 'No description available';
-        severityText.textContent = data.severity || 'Unknown';
+        // severity text and color
+        const severityValue = data.severity || 'Unknown';
+        severityText.textContent = severityValue;
+        // set color class depending on severity
+        const sev = (severityValue || '').toString().toLowerCase();
+        severityText.className = '';
+        if (sev.includes('high') || sev.includes('severe')) {
+          severityText.classList.add('severity-high');
+        } else if (sev.includes('medium') || sev.includes('moderate')) {
+          severityText.classList.add('severity-medium');
+        } else {
+          // default: low/very low/unknown -> green
+          severityText.classList.add('severity-low');
+        }
         
         // Update analysis information with fallbacks
         if (data.analysis) {
@@ -131,7 +229,8 @@
         return;
       }
       
-      resultBox.classList.remove('hidden');
+  resultBox.classList.remove('hidden');
+  if (resultPlaceholder) resultPlaceholder.style.display = 'none';
     });
   </script>
 </body>
