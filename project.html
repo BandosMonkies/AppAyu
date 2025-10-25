@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyuScan — Prototype Frontend</title>
+  <style>
+    /* Simple modern CSS — mobile-first */
+    :root{
+      --bg:#f7f7f6;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0ea5a1;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.6);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:#111827}
+    .container{max-width:1100px;margin:28px auto;padding:16px}
+
+    header{display:flex;align-items:center;gap:12px}
+    .logo{display:flex;flex-direction:column}
+    .brand{font-weight:700;font-size:18px}
+    .tag{font-size:12px;color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+
+    /* responsive columns for larger screens */
+    @media(min-width:900px){.grid{grid-template-columns:360px 1fr}}
+
+    .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+
+    /* Left column (controls) */
+    .left .profile{display:flex;align-items:center;gap:12px}
+    .avatar{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .small{font-size:13px;color:var(--muted)}
+
+    .scan-preview{height:250px;border-radius:10px;background:linear-gradient(180deg,#fbfdff,#f1f8f8);display:flex;align-items:center;justify-content:center;border:1px dashed #e6eef0;margin-top:12px}
+    .scan-preview img{max-width:100%;max-height:100%;border-radius:8px}
+
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{padding:10px 12px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:600;cursor:pointer}
+    .btn-muted{background:#eef2f2;color:#044640}
+    .btn-danger{background:var(--danger)}
+
+    /* Right column (workflow) */
+    .workflow{display:flex;flex-direction:column;gap:12px}
+    .step{display:flex;align-items:center;gap:12px}
+    .icon{width:56px;height:56px;border-radius:10px;background:#eef7f7;display:flex;align-items:center;justify-content:center;font-weight:700;color:#04605b}
+    h3{margin:0;font-size:16px}
+    p{margin:0;color:var(--muted);font-size:13px}
+
+    .log{margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(90deg,#ffffff,#fbfbfb);font-size:13px;min-height:90px;border:1px solid #eef2f2}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal{width:100%;max-width:540px;background:var(--card);border-radius:12px;padding:16px}
+
+    /* doctor list */
+    .doctor-list{display:grid;grid-template-columns:1fr;gap:10px}
+    .doctor{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;border:1px solid #f1f5f9}
+    .doc-avatar{width:44px;height:44px;border-radius:8px;background:#e6f2f2;display:flex;align-items:center;justify-content:center;color:#044640}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* small screen tweaks */
+    @media(max-width:420px){.scan-preview{height:200px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="brand">AyuScan</div>
+        <div class="tag">Village → ASHA → Scan → Doctor Cloud</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="left">
+        <div class="card">
+          <div class="profile">
+            <div class="avatar">A</div>
+            <div>
+              <div style="font-weight:700">ASHA Worker: Meena</div>
+              <div class="small">Phone: +91 98xxxxxxx</div>
+            </div>
+          </div>
+
+          <div class="scan-preview" id="preview">
+            <div style="text-align:center;color:var(--muted)">
+              <div style="font-weight:700">Scan Preview</div>
+              <div style="font-size:12px;margin-top:6px">Attach Skyvix 10× lens and capture</div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <label for="file" style="flex:1">
+              <input id="file" type="file" accept="image/*" style="display:none" onchange="loadPreview(event)"/>
+              <div class="btn-muted" style="display:flex;align-items:center;justify-content:center">Choose Image</div>
+            </label>
+            <button onclick="simulateScan()">Analyze</button>
+            <button class="btn-danger" onclick="openPay()">Priority</button>
+          </div>
+
+          <div style="margin-top:12px;font-size:13px;color:var(--muted)">Last action:</div>
+          <div class="log" id="log">No scans yet.</div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700">Doctor Queue</div>
+            <div class="small">Online: <strong id="onlineCount">3</strong></div>
+          </div>
+
+          <div class="doctor-list" style="margin-top:10px">
+            <div class="doctor"><div class="doc-avatar">DR</div><div><strong>Dr. R. Sharma</strong><div class="small">Dermatology</div></div></div>
+            <div class="doctor"><div class="doc-avatar">AK</div><div><strong>Dr. A. Khan</strong><div class="small">General Physician</div></div></div>
+            <div class="doctor"><div class="doc-avatar">LS</div><div><strong>Dr. L. Singh</strong><div class="small">Ophthalmology</div></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="workflow">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3>Workflow</h3>
+              <p class="small">Scan → AI analyze → Doctor review → Feedback</p>
+            </div>
+            <div style="text-align:right">
+              <div class="small">Scan Fee</div>
+              <div style="font-weight:700">Normal ₹30 • Priority ₹150</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:grid;gap:10px">
+            <div class="step">
+              <div class="icon">1</div>
+              <div>
+                <div style="font-weight:700">Scan</div>
+                <div class="small">ASHA worker captures image using smartphone + lens</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="icon">2</div>
+              <div>
+                <div style="font-weight:700">AI Analyze</div>
+                <div class="small">On-device model gives preliminary result & urgency flag</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="icon">3</div>
+              <div>
+                <div style="font-weight:700">Doctor Cloud</div>
+                <div class="small">Secure upload for doctor verification and prescription</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="icon">4</div>
+              <div>
+                <div style="font-weight:700">Feedback</div>
+                <div class="small">ASHA receives doctor advice and communicates to patient</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card">
+          <h3>Recent Reports</h3>
+          <div id="reports" style="margin-top:10px;display:grid;gap:8px">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Prototype Actions</h3>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button onclick="addDummyReport()">Add Dummy Report</button>
+            <button class="btn-muted" onclick="clearReports()">Clear</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer>Prototype UI — adapt this HTML/CSS for Canva or PowerPoint export.</footer>
+  </div>
+
+  <!-- Modal for payment / priority -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal card">
+      <h3>Priority Scan — ₹150</h3>
+      <p class="small">Pay to prioritize this scan. Doctors will be notified instantly.</p>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button onclick="payNow()">Pay with UPI</button>
+        <button class="btn-muted" onclick="closePay()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // small interactive behaviors for the prototype
+    const logEl = document.getElementById('log')
+    const reportsEl = document.getElementById('reports')
+    const preview = document.getElementById('preview')
+    const modal = document.getElementById('modal')
+
+    function appendLog(text){
+      const t = document.createElement('div')
+      t.textContent = new Date().toLocaleTimeString() + ' — ' + text
+      logEl.prepend(t)
+    }
+
+    function loadPreview(e){
+      const file = e.target.files[0]
+      if(!file) return
+      const url = URL.createObjectURL(file)
+      preview.innerHTML = `<img src="${url}" alt="scan" />`
+      appendLog('Image selected')
+    }
+
+    function simulateScan(){
+      appendLog('Running on-device analysis...')
+      // fake analysis time
+      setTimeout(()=>{
+        const confidence = Math.floor(60 + Math.random()*30)
+        const urgent = Math.random() > 0.75
+        const summary = urgent ? 'Possible urgent lesion — doctor review recommended' : 'Suspicious mark detected — send to doctor for confirmation'
+        appendLog(summary + ` (confidence ${confidence}%)`)
+        addReport({type: urgent ? 'Priority' : 'Normal', summary, confidence})
+      }, 1200)
+    }
+
+    function addReport(report){
+      const id = 'R' + Math.floor(Math.random()*9000+1000)
+      const node = document.createElement('div')
+      node.className = 'doctor'
+      node.innerHTML = `<div class="doc-avatar">${report.type=='Priority'? '⚡':'✓'}</div><div><strong>${report.summary}</strong><div class="small">ID: ${id} • Confidence: ${report.confidence}%</div></div>`
+      reportsEl.prepend(node)
+      appendLog('Report uploaded to Doctor Cloud (ID: ' + id + ')')
+    }
+
+    function addDummyReport(){
+      addReport({type:'Normal',summary:'Dry rash — likely fungal infection',confidence:78})
+    }
+
+    function clearReports(){
+      reportsEl.innerHTML = ''
+      appendLog('Cleared reports')
+    }
+
+    function openPay(){ modal.style.display = 'flex' }
+    function closePay(){ modal.style.display = 'none' }
+    function payNow(){
+      appendLog('Priority payment processed — notifying doctors')
+      closePay()
+      // simulate immediate doctor response
+      setTimeout(()=>{
+        appendLog('Doctor accepted priority case — recommendation sent')
+        addReport({type:'Priority',summary:'Immediate referral: suspect bacterial infection. Start oral antibiotic & refer to PHC',confidence:92})
+      },1200)
+    }
+
+    // init
+    appendLog('AyuScan UI ready')
+  </script>
+</body>
+</html>
