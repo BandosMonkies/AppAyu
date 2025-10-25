@@ -58,6 +58,15 @@
       </section>
 
       <section class="right-card card">
+        <!-- Severe Alert Banner -->
+        <div id="severeAlert" class="severe-alert hidden">
+          <div class="severe-alert-content">
+            <h2>🚨 SEVERE CONDITION DETECTED 🚨</h2>
+            <p><strong>Please contact a doctor immediately!</strong></p>
+            <p>This condition requires immediate medical attention. Do not delay seeking professional healthcare.</p>
+          </div>
+        </div>
+
         <div id="result" class="result-box hidden">
       <h2>Prediction Result</h2>
       <p><strong>Disease:</strong> <span id="disease"></span></p>
@@ -72,7 +81,7 @@
         <p><strong>Description:</strong> <span id="description"></span></p>
         <p><strong>Severity Level:</strong> <span id="severity"></span></p>
         <div class="treatments">
-          <p><strong>Recommended Treatments:</strong></p>
+          <p><strong>Recommended Medicines:</strong></p>
           <ul id="treatments"></ul>
         </div>
         <div class="disclaimer">
@@ -198,6 +207,54 @@
           severityText.classList.add('severity-low');
         }
         
+        // Check if severity is severe and show alert
+        const isSevere = sev.includes('severe');
+        const severeAlert = document.getElementById('severeAlert');
+        const treatmentsContainer = treatmentsList.closest('.treatments');
+        
+        if (isSevere) {
+          // Show severe alert
+          severeAlert.classList.remove('hidden');
+          
+          // Hide and replace treatments with contact doctor message
+          treatmentsContainer.innerHTML = '';
+          const contactDoctorDiv = document.createElement('div');
+          contactDoctorDiv.className = 'contact-doctor-message';
+          contactDoctorDiv.innerHTML = `
+            <p><strong style="color: #dc2626; font-size: 1.2rem;">⚠️ Medical Attention Required</strong></p>
+            <p style="color: #991b1b; font-weight: 600;">Please contact a doctor immediately for proper diagnosis and treatment.</p>
+            <p style="margin-top: 10px; color: #b91c1c;">This condition requires immediate professional medical care.</p>
+          `;
+          treatmentsContainer.appendChild(contactDoctorDiv);
+          
+          // Add click handler to close the alert
+          severeAlert.addEventListener('click', function(e) {
+            if (e.target === severeAlert) {
+              severeAlert.classList.add('hidden');
+            }
+          });
+        } else {
+          // Hide severe alert and show normal treatments
+          severeAlert.classList.add('hidden');
+          
+          treatmentsContainer.innerHTML = '<p><strong>Recommended Medicines:</strong></p><ul id="treatments"></ul>';
+          const treatmentsList = document.getElementById('treatments');
+          
+          // Clear and update medicines list with fallback
+          treatmentsList.innerHTML = '';
+          if (Array.isArray(data.medicines) && data.medicines.length > 0) {
+            data.medicines.forEach(medicine => {
+              const li = document.createElement('li');
+              li.textContent = medicine;
+              treatmentsList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement('li');
+            li.textContent = 'No specific medicines provided';
+            treatmentsList.appendChild(li);
+          }
+        }
+        
         // Update analysis information with fallbacks
         if (data.analysis) {
           colorToneText.textContent = data.analysis.color_tone || 'Not analyzed';
@@ -207,20 +264,6 @@
           colorToneText.textContent = 'Not analyzed';
           textureText.textContent = 'Not analyzed';
           imageSizeText.textContent = 'Not analyzed';
-        }
-        
-        // Clear and update treatments list with fallback
-        treatmentsList.innerHTML = '';
-        if (Array.isArray(data.treatments) && data.treatments.length > 0) {
-          data.treatments.forEach(treatment => {
-            const li = document.createElement('li');
-            li.textContent = treatment;
-            treatmentsList.appendChild(li);
-          });
-        } else {
-          const li = document.createElement('li');
-          li.textContent = 'No specific treatments provided';
-          treatmentsList.appendChild(li);
         }
       } catch (error) {
         detectBtn.textContent = '🔍 Detect Disease';

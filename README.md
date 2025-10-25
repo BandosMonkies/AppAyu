@@ -1,154 +1,177 @@
-# AppAyu - AI-Powered Healthcare Application
+# Hack-o-ween Healthcare Application
 
-A comprehensive healthcare web application featuring AI-powered skin disease detection and patient information management.
+A healthcare application for ASHA workers to manage patients and perform AI-powered disease detection.
 
-## Core Features
+## Features
 
-### AI Disease Detection
-- Upload and analyze skin images
-- AI-powered disease detection using Google Gemini AI
-- Detailed analysis including:
-  - Disease identification
-  - Confidence level
-  - Severity assessment
-  - Visual characteristics
-  - Treatment recommendations
+- **ASHA Worker Management**: Database schema for ASHA workers with authentication
+- **Patient Management**: Patient registration and disease history tracking
+- **AI Disease Detection**: Gemini AI-powered image analysis for skin, eye, and oral conditions
+- **Multi-language Support**: English, Hindi, and Kannada
 
-### Patient Management
-- Comprehensive patient form
-  - Personal information (name, age, gender, contact details)
-  - Medical history (allergies, medications, existing conditions)
-  - Current symptoms with severity levels
-  - Vital signs tracking
-- Photo upload for affected body parts
-- Medical reports/prescriptions upload
+## Database Schemas
 
-### Mobile-First Design
-- Responsive layout optimized for mobile devices
-- Touch-friendly form inputs
-- Image capture from mobile camera
-- Smooth scrolling and animations
+### 1. ASHA Workers (`asha_workers` collection)
+Stores ASHA worker information:
+- `name`: Full name of the worker
+- `asha_id`: Unique ASHA worker ID
+- `mobile`: Mobile number (used for authentication)
+- `education`: Education qualification
+- `years`: Years of service
+- `village`: Village/PHC assignment
+- `password`: Encrypted password (should be hashed in production)
+- `photo`: Profile photo (base64 encoded)
+- `created`: Account creation timestamp
+- `updated`: Last update timestamp
 
-### Data Security
-- File size validation (max 5MB per file)
-- File type restrictions
-- Consent checkboxes for data processing
-- Secure file uploads
+### 2. Patients (`users` collection)
+Stores patient information:
+- `username`: Patient name
+- `phone`: Phone number (normalized)
+- `diseases`: Array of disease records
+  - `name`: Disease name
+  - `detected_at`: Detection timestamp
+- `created`: Account creation timestamp
 
-## Technical Stack
+## API Endpoints
 
-- Backend: Flask (Python)
-- AI Model: Google Gemini AI
-- Frontend: HTML, CSS, JavaScript
-- Image Processing: PIL (Python Imaging Library)
+### ASHA Worker Endpoints
+
+#### Register ASHA Worker
+```
+POST /register_asha_worker
+Body: {
+  "name": "string",
+  "ashaId": "string",
+  "mobile": "string",
+  "education": "string",
+  "years": number,
+  "village": "string",
+  "password": "string"
+}
+```
+
+#### Login ASHA Worker
+```
+POST /login_asha_worker
+Body: {
+  "mobile": "string",
+  "otp": "string" (optional),
+  "password": "string" (optional)
+}
+```
+
+#### Get ASHA Worker
+```
+POST /get_asha_worker
+Body: {
+  "mobile": "string"
+}
+```
+
+#### Update ASHA Worker
+```
+POST /update_asha_worker
+Body: {
+  "mobile": "string",
+  "name": "string" (optional),
+  "asha_id": "string" (optional),
+  "education": "string" (optional),
+  "years": number (optional),
+  "village": "string" (optional),
+  "photo": "string" (optional),
+  "password": "string" (optional)
+}
+```
+
+### Patient Endpoints
+
+#### Add Patient
+```
+POST /add_patient
+Body: {
+  "name": "string",
+  "phone": "string"
+}
+```
+
+#### Add Disease
+```
+POST /add_disease
+Body: {
+  "username": "string",
+  "disease_name": "string"
+}
+```
+
+#### Search Patient
+```
+POST /search_patient
+Body: {
+  "name": "string" (optional),
+  "phone": "string" (optional)
+}
+```
+
+### AI Detection
+
+#### Predict Disease
+```
+POST /predict
+Form Data:
+  - file: image file
+  - category: "skin" | "eye" | "oral" | "other"
+  - patient_name: "string" (optional)
+  - age: number (optional)
+  - extra_info: "string" (optional)
+```
 
 ## Setup Instructions
 
-### 1. Install Dependencies
-
+1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install flask flask-cors pymongo google-generativeai pillow
 ```
 
-Or install manually:
+2. Start MongoDB:
 ```bash
-pip install flask google-generativeai pillow Flask-CORS Werkzeug
+mongod
 ```
 
-### 2. Configure Environment
-
-Set up Gemini API key:
-```bash
-export GEMINI_API_KEY="your-api-key"
-```
-
-### 3. Start the Application
-
+3. Run the application:
 ```bash
 python app.py
 ```
 
-The server will start on `http://localhost:5000`
+4. Access the application:
+```
+http://localhost:5000
+```
 
 ## File Structure
 
 ```
-AppAyu/
-├── app.py            # Main Flask application
-├── static/          
-│   ├── style.css     # Mobile-optimized styles
-│   └── uploads/      # Generated automatically
-├── template/
-│   └── index.html    # Main frontend interface
-└── README.md
+arch/
+├── app.py                      # Main Flask application
+├── asha_worker_schema.py       # ASHA worker database schema
+├── user_schema.py              # Patient database schema
+├── disease_schema.py           # Disease tracking schema
+├── templates/
+│   ├── Home.html              # ASHA worker dashboard
+│   └── index.html             # Disease detection page
+├── static/
+│   ├── style.css              # Styles
+│   └── uploads/               # Uploaded images
+└── README.md                   # This file
 ```
 
-## API Endpoints
+## Notes
 
-### POST `/detect`
-Submit images for AI analysis
-- Accepts: Image file
-- Returns: AI analysis results
-
-### GET `/`
-Main application interface
-- Returns: Web interface
-
-## Usage
-
-1. Open the application in your web browser
-2. Upload a skin image
-3. Click "Detect Disease"
-4. View the detailed analysis results
-5. Fill out additional patient information if needed
-
-## Testing on Mobile
-
-### Using ngrok (for testing on real mobile devices):
-
-```bash
-# Install ngrok: https://ngrok.com/download
-ngrok http 5000
-```
-
-This will give you a public URL you can access from your mobile phone.
-
-### Using Local Network:
-
-1. Find your computer's local IP address
-2. Access from mobile: `http://YOUR_LOCAL_IP:5000`
-
-## Browser Compatibility
-
-- ✅ Chrome (recommended)
-- ✅ Safari
-- ✅ Firefox
-- ✅ Edge
-- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Security Notes
-
-⚠️ This is a development version. For production use:
-- Add authentication and authorization
-- Implement HTTPS/SSL
-- Add proper database integration
-- Implement data encryption
-- Add input sanitization and validation
-- Implement rate limiting
-- Add HIPAA compliance measures
-- Use secure cloud storage
-
-## Disclaimer
-
-This is an AI-powered prediction tool for educational purposes only. Please consult a qualified healthcare professional for proper diagnosis and treatment.
+- All passwords should be hashed in production using bcrypt or similar
+- OTP verification should be implemented with actual SMS service
+- MongoDB connection string can be modified in schema files
+- Gemini API key should be set as environment variable
 
 ## License
 
 MIT License
-
-## Support
-
-For issues or questions:
-1. Check the console logs in your browser (F12)
-2. Check the terminal output from the Flask server
-3. Submit an issue on GitHub

@@ -187,7 +187,7 @@
       <div class="muted" data-key="loginDesc">Enter your mobile number. We'll send a one-time PIN (simulated for demo).</div>
 
       <label data-key="mobileLabel">Mobile Number</label>
-      <input id="loginMobile" placeholder="e.g., 98XXXXXXXX" inputmode="numeric" />
+      <input id="loginMobile" placeholder="e.g., 98XXXXXXXX" inputmode="numeric"/>
 
       <div id="otpSection" class="hidden">
         <label data-key="otpLabel">Enter OTP</label>
@@ -318,7 +318,7 @@
                 <input type="tel" id="patientPhone" placeholder="Enter phone number">
               </div>
               
-              <button class="btn" onclick="findPatient()" data-key="findPatientBtn">Find Patient</button>
+              <button class="btn" onclick="findPatient()" data-key="findPatientBtn">Find/Create Patient</button>
               
               <!-- User Information Card -->
               <div id="userInfoCard" class="card" style="margin-top: 20px; display: none;">
@@ -465,7 +465,7 @@
         patientSearchTitle: "Find Patient",
         patientNameLabel: "Patient Name",
         patientPhoneLabel: "Phone Number",
-        findPatientBtn: "Find Patient",
+        findPatientBtn: "Find/Create Patient",
         patientInfoTitle: "Patient Information",
         patientHistoryTitle: "Medical History",
         newScanTitle: "New Medical Scan",
@@ -535,7 +535,7 @@
         patientSearchTitle: "रोगी ढूंढें",
         patientNameLabel: "रोगी का नाम",
         patientPhoneLabel: "फोन नंबर",
-        findPatientBtn: "रोगी ढूंढें",
+        findPatientBtn: "रोगी ढूंढें/बनाएँ",
         patientInfoTitle: "रोगी की जानकारी",
         patientHistoryTitle: "चिकित्सा इतिहास",
         newScanTitle: "नई मेडिकल स्कैन",
@@ -605,7 +605,7 @@
         patientSearchTitle: "ರೋಗಿಯನ್ನು ಹುಡುಕಿ",
         patientNameLabel: "ರೋಗಿಯ ಹೆಸರು",
         patientPhoneLabel: "ಫೋನ್ ನಂಬರ",
-        findPatientBtn: "ರೋಗಿಯನ್ನು ಹುಡುಕಿ",
+        findPatientBtn: "ರೋಗಿಯನ್ನು ಹುಡುಕಿ/ರಚಿಸಿ",
         patientInfoTitle: "ರೋಗಿಯ ಮಾಹಿತಿ",
         patientHistoryTitle: "ವೈದ್ಯಕೀಯ ಇತಿಹಾಸ",
         newScanTitle: "ಹೊಸ ವೈದ್ಯಕೀಯ ಸ್ಕ್ಯಾನ್",
@@ -697,6 +697,13 @@
       const name = document.getElementById('patientName').value.trim();
       const phone = document.getElementById('patientPhone').value.trim();
       
+      // Validate phone if provided (digits, optional leading +, and dashes only)
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (phone && !phoneRegex.test(phone)) {
+        alert('Please enter a valid phone number (digits, optional + and - only).');
+        return;
+      }
+
       if (!name && !phone) {
         alert('Please enter patient name or phone number');
         return;
@@ -1013,7 +1020,7 @@
     }
 
     // ---------- Signup ----------
-    function createAccount(){
+    async function createAccount(){
       const name = qs('suName').value.trim();
       const ashaId = qs('suAshaId').value.trim();
       const mobile = qs('suMobile').value.trim();
@@ -1023,57 +1030,114 @@
       const pw = qs('suPassword').value;
       const pw2 = qs('suPassword2').value;
 
+      // Phone number validation (digits, optional leading +, and dashes only)
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if(mobile && !phoneRegex.test(mobile)) return alert('Please enter a valid phone number (digits, optional + and - only).');
+
       if(!name || !mobile || !ashaId || !pw) return alert('Please fill name, ASHA ID, mobile and password.');
 
       if(pw !== pw2) return alert('Passwords do not match.');
 
-      const users = loadUsers();
-      if(users[mobile]) return alert('An account with this mobile already exists. Please login.');
-
-      users[mobile] = {
-        name, ashaId, mobile, education, years: years || 0, village, password: pw, photo: ''
-      };
-      saveUsers(users);
-      alert('Account created. Please login.');
-      // prefill login mobile
-      qs('loginMobile').value = mobile;
-      goTo('login');
+      // Register with backend API
+      try {
+        const response = await fetch('/register_asha_worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, ashaId, mobile, education, years: parseInt(years) || 0, village, password: pw })
+        });
+        
+        const result = await response.json();
+        alert(result.message || (result.success ? 'Account created successfully!' : 'Failed to create account'));
+        
+        if(result.success) {
+          // Store in localStorage for session management
+          const userData = { name: result.worker.name, ashaId: result.worker.asha_id, mobile: result.worker.mobile, 
+                            education: result.worker.education, years: result.worker.years, village: result.worker.village, photo: result.worker.photo || '' };
+          const users = loadUsers();
+          users[mobile] = userData;
+          saveUsers(users);
+          
+          // prefill login mobile
+          qs('loginMobile').value = mobile;
+          goTo('login');
+        }
+      } catch(error) {
+        alert('Error creating account: ' + error.message);
+      }
     }
 
     // ---------- Login via OTP (simulated) ----------
     let currentOtp = null;
-    function sendOtp(){
+    async function sendOtp(){
       const mobile = qs('loginMobile').value.trim();
       if(!mobile) return alert('Enter mobile number.');
-      const users = loadUsers();
-      if(!users[mobile]) return alert('No account found for this mobile. Create account first.');
+      
+      // Check if worker exists in database
+      try {
+        const response = await fetch('/get_asha_worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile })
+        });
+        
+        const result = await response.json();
+        if(!result.success) {
+          alert('No account found for this mobile. Create account first.');
+          return;
+        }
 
-      // simulate OTP generation and "send"
-      currentOtp = String(Math.floor(1000 + Math.random()*9000));
-      console.log('Simulated OTP for demo:', currentOtp);
-      alert('Simulated OTP (for demo): ' + currentOtp);
+        // simulate OTP generation and "send"
+        currentOtp = String(Math.floor(1000 + Math.random()*9000));
+        console.log('Simulated OTP for demo:', currentOtp);
+        alert('Simulated OTP (for demo): ' + currentOtp);
 
-      // show OTP input
-      qs('otpSection').classList.remove('hidden');
-      qs('sendOtpBtn').classList.add('hidden');
-      qs('verifyOtpBtn').classList.remove('hidden');
+        // show OTP input
+        qs('otpSection').classList.remove('hidden');
+        qs('sendOtpBtn').classList.add('hidden');
+        qs('verifyOtpBtn').classList.remove('hidden');
+      } catch(error) {
+        alert('Error checking account: ' + error.message);
+      }
     }
 
-    function verifyOtp(){
+    async function verifyOtp(){
       const entered = qs('loginOtp').value.trim();
       if(!entered) return alert('Enter OTP.');
       if(entered !== currentOtp) return alert('Invalid OTP. Try again.');
-      // set as logged in
+      
+      // Login via API
       const mobile = qs('loginMobile').value.trim();
-      setCurrentUser(mobile);
-      currentOtp = null;
-      qs('loginOtp').value = '';
-      qs('loginMobile').value = '';
-      qs('otpSection').classList.add('hidden');
-      qs('sendOtpBtn').classList.remove('hidden');
-      qs('verifyOtpBtn').classList.add('hidden');
-      goTo('dashboard');
-      appendLog('Logged in as ' + mobile);
+      try {
+        const response = await fetch('/login_asha_worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, otp: entered })
+        });
+        
+        const result = await response.json();
+        if(result.success && result.worker) {
+          // Store in localStorage for session management
+          const userData = { name: result.worker.name, ashaId: result.worker.asha_id, mobile: result.worker.mobile, 
+                            education: result.worker.education, years: result.worker.years, village: result.worker.village, photo: result.worker.photo || '' };
+          const users = loadUsers();
+          users[mobile] = userData;
+          saveUsers(users);
+          
+          setCurrentUser(mobile);
+          currentOtp = null;
+          qs('loginOtp').value = '';
+          qs('loginMobile').value = '';
+          qs('otpSection').classList.add('hidden');
+          qs('sendOtpBtn').classList.remove('hidden');
+          qs('verifyOtpBtn').classList.add('hidden');
+          goTo('dashboard');
+          appendLog('Logged in as ' + mobile);
+        } else {
+          alert(result.message || 'Login failed');
+        }
+      } catch(error) {
+        alert('Login error: ' + error.message);
+      }
     }
 
     function logout(){
@@ -1110,21 +1174,40 @@
       renderTopRight();
     }
 
-    function saveProfile(){
+    async function saveProfile(){
       const cur = getCurrentUser();
       if(!cur) return alert('No user logged in');
-      const users = loadUsers();
-      const u = users[cur];
-      u.name = qs('pfName').value.trim();
-      u.ashaId = qs('pfAshaId').value.trim();
-      u.mobile = qs('pfMobile').value.trim();
-      u.education = qs('pfEducation').value.trim();
-      u.years = qs('pfYears').value.trim();
-      u.village = qs('pfVillage').value.trim();
-      users[cur] = u;
-      saveUsers(users);
-      alert('Profile saved.');
-      populateProfile();
+      
+      const name = qs('pfName').value.trim();
+      const ashaId = qs('pfAshaId').value.trim();
+      const mobile = qs('pfMobile').value.trim();
+      const education = qs('pfEducation').value.trim();
+      const years = qs('pfYears').value.trim();
+      const village = qs('pfVillage').value.trim();
+      
+      // Update in database
+      try {
+        const response = await fetch('/update_asha_worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: cur, name, asha_id: ashaId, mobile, education, years: parseInt(years) || 0, village })
+        });
+        
+        const result = await response.json();
+        if(result.success) {
+          // Update localStorage for session management
+          const users = loadUsers();
+          users[cur] = { name, ashaId, mobile, education, years: parseInt(years) || 0, village, photo: users[cur]?.photo || '' };
+          saveUsers(users);
+          
+          alert('Profile saved.');
+          populateProfile();
+        } else {
+          alert(result.message || 'Failed to save profile');
+        }
+      } catch(error) {
+        alert('Error saving profile: ' + error.message);
+      }
     }
 
     function resetProfile(){

@@ -66,6 +66,13 @@ body{
 
 .treatments ul{padding-left:18px;margin:8px 0}
 .treatments li{margin:8px 0}
+.contact-doctor-message {
+  padding: 20px;
+  background: #fef2f2;
+  border: 2px solid #dc2626;
+  border-radius: 10px;
+  margin-top: 10px;
+}
 
 .disclaimer{margin-top:14px;padding:12px;background:var(--danger);border-radius:8px;color:#3b2b00}
 
@@ -83,4 +90,57 @@ body{
 .severity-high{color:#b91c1c;font-weight:700}
 .severity-medium{color:#b45309;font-weight:650}
 .severity-low{color:#15803d;font-weight:700}
+
+/* severe alert */
+.severe-alert {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+}
+.severe-alert.hidden {
+  display: none;
+}
+.severe-alert-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(220, 38, 38, 0.5);
+  text-align: center;
+  max-width: 600px;
+  animation: pulse 2s infinite;
+}
+.severe-alert-content h2 {
+  margin: 0 0 20px;
+  font-size: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+.severe-alert-content p {
+  margin: 12px 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+.severe-alert-content strong {
+  font-size: 1.3rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.02); }
+}
 
