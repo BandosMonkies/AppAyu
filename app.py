@@ -352,7 +352,13 @@ def make_json_response(data, status=200):
 
 @app.route('/')
 def home():
+    return render_template('HomePage.html')
+
+
+@app.route('/home')
+def home_page():
     return render_template('Home.html')
+
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AYU.AI — Home</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        color: #fff;
+        /* allow vertical scrolling on smaller screens */
+        overflow-x: hidden;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      /* Full-screen blurred background image */
+      .bg-image {
+        position: fixed;
+        inset: 0;
+        background-image: url("{{ url_for('static', filename='uploads/background.jpeg') }}");
+        background-size: cover;
+        background-position: center;
+        /* reduce blur and zoom so background isn't overly enlarged */
+        filter: blur(6px);
+        transform: scale(1.03);
+        z-index: -2;
+        animation: subtleZoom 20s ease-in-out infinite alternate;
+      }
+
+      @keyframes subtleZoom {
+        0% {
+          transform: scale(1.02);
+        }
+        100% {
+          transform: scale(1.06);
+        }
+      }
+
+      /* Subtle dark overlay with gradient */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(14,165,164,0.25) 100%);
+        z-index: -1;
+        animation: overlayPulse 8s ease-in-out infinite alternate;
+      }
+
+      @keyframes overlayPulse {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.85;
+        }
+      }
+
+      /* Main centered content */
+      .center-wrap {
+        position: relative;
+        z-index: 1;
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 24px;
+        padding: 24px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 700;
+        margin-bottom: 0;
+        letter-spacing: 1px;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        animation: fadeInDown 0.8s ease-out;
+        background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h2 {
+        font-size: clamp(1.1rem, 3vw, 1.5rem);
+        font-weight: 500;
+        color: #fef08a;
+        margin-top: 8px;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+        max-width: 600px;
+        line-height: 1.5;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        /* make logo smaller overall, especially on large screens */
+        width: clamp(160px, 28vw, 300px);
+        height: clamp(160px, 28vw, 300px);
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5), 
+                    0 0 0 8px rgba(255,255,255,0.1),
+                    0 0 40px rgba(14,165,164,0.3);
+        border: 4px solid rgba(255,255,255,0.2);
+        background: #fff;
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: fadeInScale 1s ease-out 0.4s both;
+        position: relative;
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.8) rotate(-10deg);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
+      .logo::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #0ea5a4, #06b6d4, #8b5cf6, #ec4899);
+        background-size: 300% 300%;
+        animation: gradientRotate 4s ease infinite;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
+
+      @keyframes gradientRotate {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .logo:hover {
+        transform: scale(1.08) rotate(5deg);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.6), 
+                    0 0 0 12px rgba(255,255,255,0.15),
+                    0 0 60px rgba(14,165,164,0.5);
+      }
+
+      .logo:hover::before {
+        opacity: 1;
+      }
+
+      .logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.5s ease;
+      }
+
+      .logo:hover img {
+        transform: scale(1.05);
+      }
+
+      .sign-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #0ea5a4 0%, #06b6d4 100%);
+        color: #fff;
+        padding: 16px 48px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        box-shadow: 0 10px 30px rgba(14,165,164,0.3),
+                    0 0 0 0 rgba(14,165,164,0.5);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 1s ease-out 0.6s both;
+        letter-spacing: 0.5px;
+      }
+
+      .sign-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+      }
+
+      .sign-btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .sign-btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 20px 50px rgba(14,165,164,0.4),
+                    0 0 0 8px rgba(14,165,164,0.2);
+        background: linear-gradient(135deg, #06b6d4 0%, #0ea5a4 100%);
+      }
+
+      .sign-btn:active {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(14,165,164,0.3);
+      }
+
+      .sign-btn span {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Floating particles effect */
+      .particle {
+        position: fixed;
+        width: 4px;
+        height: 4px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: float 15s infinite;
+        z-index: 0;
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(50px);
+          opacity: 0;
+        }
+      }
+
+      /* Tag line with typewriter effect */
+      .tagline {
+        font-size: clamp(0.9rem, 2vw, 1.1rem);
+        color: rgba(255,255,255,0.8);
+        margin-top: 12px;
+        animation: fadeIn 1s ease-out 0.8s both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .center-wrap {
+          gap: 20px;
+          padding: 20px;
+        }
+
+        h1 {
+          letter-spacing: 0.5px;
+        }
+
+        h2 {
+          margin-bottom: 16px;
+        }
+
+        .sign-btn {
+          padding: 14px 40px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .center-wrap {
+          gap: 16px;
+          padding: 16px;
+        }
+
+        .logo {
+          box-shadow: 0 15px 40px rgba(0,0,0,0.5), 
+                      0 0 0 6px rgba(255,255,255,0.1),
+                      0 0 30px rgba(14,165,164,0.3);
+        }
+
+        .sign-btn {
+          padding: 12px 32px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Accessibility improvements */
+      .sign-btn:focus-visible {
+        outline: 3px solid #fef08a;
+        outline-offset: 4px;
+      }
+
+      @media (hover: none) {
+        .logo:hover {
+          transform: scale(1);
+        }
+        
+        .sign-btn:hover {
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Background Layers -->
+    <div class="bg-image" aria-hidden="true"></div>
+    <div class="overlay" aria-hidden="true"></div>
+
+    <!-- Floating particles -->
+    <script>
+      // Create floating particles
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+        document.body.appendChild(particle);
+      }
+    </script>
+
+    <!-- Foreground Content -->
+    <main class="center-wrap">
+      <h1>Welcome to AYU.AI</h1>
+      <h2>Empowering ASHA Workers with AI-Driven Disease Detection</h2>
+
+      <div class="logo" role="img" aria-label="AYU.AI logo">
+        <img src="{{ url_for('static', filename='uploads/mylogo.jpeg') }}" alt="AYU.AI">
+      </div>
+
+      <p class="tagline">Advanced Healthcare • Rural Communities • AI Technology</p>
+
+      <a href="{{ url_for('home_page') }}" class="sign-btn" id="signInBtn">
+        <span>Sign In</span>
+      </a>
+    </main>
+  </body>
+</html>
