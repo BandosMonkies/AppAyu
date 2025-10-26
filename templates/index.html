@@ -43,6 +43,15 @@
               <option value="oral">🦷 Oral Health</option>
               <option value="other">🔬 Other Medical Issue</option>
             </select>
+            
+            <label for="languageSelect" class="select-label">🌐 Output Language</label>
+            <select id="languageSelect" aria-label="Language selection">
+              <option value="en">🇺🇸 English</option>
+              <option value="hi">🇮🇳 Hindi (हिंदी)</option>
+              <option value="kn">🇮🇳 Kannada (ಕನ್ನಡ)</option>
+            </select>
+            <small class="muted">Note: Translation requires Google Cloud Translation API key configuration</small>
+            
             <button id="detectBtn" class="primary">🔍 Analyze Image</button>
           </div>
 
@@ -205,6 +214,9 @@
   formData.append('file', selectedFile);
   // include selected category
   formData.append('category', categorySelect ? categorySelect.value : 'skin');
+  // include selected language
+  const languageSelect = document.getElementById('languageSelect');
+  formData.append('language', languageSelect ? languageSelect.value : 'en');
   // include patient info
   formData.append('patient_name', currentPatient.name);
   formData.append('patient_phone', currentPatient.phone);

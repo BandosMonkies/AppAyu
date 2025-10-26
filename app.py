@@ -30,11 +30,115 @@ except Exception as e:
     GEMINI_ENABLED = False
     print(f"[warn] Gemini AI not available: {e}")
 
+# --- Google Cloud Translation Setup ---
+# We support API-key based translation via the Google Translation v2 REST API.
+GOOGLE_TRANSLATE_API_KEY = os.environ.get("GOOGLE_TRANSLATE_API_KEY")
+TRANSLATION_ENABLED = bool(GOOGLE_TRANSLATE_API_KEY)
+if TRANSLATION_ENABLED:
+    print("[info] Google Cloud Translation enabled (API key detected)")
+else:
+    print("[warn] Google Cloud Translation disabled (no API key)")
+
 # --- Flask App ---
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 # ----------------- Helper Functions -----------------
+
+def translate_text(text, target_language='en'):
+    """
+    Translate text using Google Cloud Translation API.
+    
+    Args:
+        text (str): Text to translate
+        target_language (str): Target language code ('en', 'hi', 'kn')
+    
+    Returns:
+        str: Translated text or original text if translation fails
+    """
+    if not TRANSLATION_ENABLED or target_language == 'en' or not text:
+        return text
+
+    # Call Google Translation v2 REST API using the provided API key
+    try:
+        import json as _json
+        from urllib import request as _urlrequest
+        from urllib.error import HTTPError, URLError
+
+        api_url = f"https://translation.googleapis.com/language/translate/v2?key={GOOGLE_TRANSLATE_API_KEY}"
+        payload = {
+            "q": text,
+            "target": target_language,
+            "format": "text"
+        }
+        data = _json.dumps(payload).encode("utf-8")
+        req = _urlrequest.Request(api_url, data=data, headers={"Content-Type": "application/json"}, method="POST")
+        with _urlrequest.urlopen(req, timeout=10) as resp:
+            resp_body = resp.read().decode("utf-8")
+            parsed = _json.loads(resp_body)
+            translated = parsed.get("data", {}).get("translations", [{}])[0].get("translatedText")
+            return translated or text
+    except (HTTPError, URLError) as net_err:
+        print(f"[warn] Translation network error: {net_err}")
+        return text
+    except Exception as e:
+        print(f"[warn] Translation failed for '{str(text)[:50]}...': {e}")
+        return text
+
+def translate_analysis_result(analysis_result, target_language='en'):
+    """
+    Translate the entire analysis result to the target language.
+    
+    Args:
+        analysis_result (dict): The AI analysis result
+        target_language (str): Target language code ('en', 'hi', 'kn')
+    
+    Returns:
+        dict: Translated analysis result
+    """
+    if target_language == 'en' or not TRANSLATION_ENABLED:
+        return analysis_result
+    
+    try:
+        translated_result = analysis_result.copy()
+        
+        # Translate main fields
+        if 'disease' in translated_result:
+            translated_result['disease'] = translate_text(translated_result['disease'], target_language)
+        
+        if 'description' in translated_result:
+            translated_result['description'] = translate_text(translated_result['description'], target_language)
+        
+        if 'severity' in translated_result:
+            translated_result['severity'] = translate_text(translated_result['severity'], target_language)
+        
+        # Translate medicines list
+        if 'medicines' in translated_result and isinstance(translated_result['medicines'], list):
+            translated_medicines = []
+            for medicine in translated_result['medicines']:
+                # Remove bullet point for translation, then add it back
+                clean_medicine = medicine.replace('• ', '') if medicine.startswith('• ') else medicine
+                translated_medicine = translate_text(clean_medicine, target_language)
+                translated_medicines.append(f"• {translated_medicine}")
+            translated_result['medicines'] = translated_medicines
+        
+        # Translate analysis details
+        if 'analysis' in translated_result and isinstance(translated_result['analysis'], dict):
+            analysis = translated_result['analysis']
+            if 'color_tone' in analysis:
+                analysis['color_tone'] = translate_text(analysis['color_tone'], target_language)
+            if 'texture' in analysis:
+                analysis['texture'] = translate_text(analysis['texture'], target_language)
+        
+        # Translate disclaimer
+        if 'disclaimer' in translated_result:
+            translated_result['disclaimer'] = translate_text(translated_result['disclaimer'], target_language)
+        
+        return translated_result
+        
+    except Exception as e:
+        print(f"[error] Failed to translate analysis result: {e}")
+        return analysis_result
 
 def is_valid_image(file):
     # Check if file has an allowed extension
@@ -585,6 +689,7 @@ def predict():
     try:
         # Get patient and form information
         category = request.form.get('category', 'skin')
+        language = request.form.get('language', 'en')  # Get selected language
         patient_name = request.form.get('patient_name')
         age = request.form.get('age')
         extra_info = request.form.get('extra_info')
@@ -597,6 +702,9 @@ def predict():
         analysis_result = analyze_with_gemini(filepath, category=category, age=age, extra_info=extra_info)
         if "error" in analysis_result:
             return jsonify({'error': analysis_result["error"]}), 500
+        
+        # Translate the analysis result to the selected language
+        translated_result = translate_analysis_result(analysis_result, language)
             
         # Store disease in database for patient with ASHA worker info
         if patient_name:
@@ -608,7 +716,7 @@ def predict():
                     "mobile": asha_worker_mobile
                 }
             add_disease(patient_name, analysis_result.get('disease', 'Unknown condition'), asha_worker_info)
-        return jsonify(analysis_result)
+        return jsonify(translated_result)
     except Exception as e:
         print(f"[error] Exception while processing {filepath}: {e}")
         return jsonify({'error': str(e)}), 500

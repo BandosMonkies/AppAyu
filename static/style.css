@@ -421,6 +421,23 @@ body{
   display:block;
 }
 
+.select-label{
+  display:block;
+  font-weight:500;
+  color:#374151;
+  margin-bottom:0.5rem;
+  font-size:0.875rem;
+}
+
+.small{
+  font-size:0.75rem;
+  line-height:1.4;
+}
+
+.muted{
+  color:var(--muted);
+}
+
 /* ASHA worker info styling */
 .asha-worker-info{
   margin-top:1.5rem;

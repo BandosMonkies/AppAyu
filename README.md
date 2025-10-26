@@ -148,6 +148,20 @@ python app.py
 http://localhost:5000
 ```
 
+### Enable AI Translation (optional)
+
+To display AI analysis in Hindi or Kannada, provide a Google Translation v2 API key via environment variable before starting the app:
+
+```bash
+export GOOGLE_TRANSLATE_API_KEY="<your_google_translation_api_key>"
+python app.py
+```
+
+Notes:
+- The app uses the Google Translation v2 REST API directly; only an API key is required (no service account needed).
+- On the detection page, choose the desired Output Language before running analysis.
+- If the key is missing or invalid, the app will gracefully fall back to English output.
+
 ## File Structure
 
 ```
